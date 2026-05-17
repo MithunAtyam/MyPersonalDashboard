@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f0f">
+<title>My Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0f0f;--bg2:#181818;--bg3:#222;--bg4:#2a2a2a;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --text:#f0ede8;--text2:#9a9590;--text3:#5a5550;
+  --accent:#c8b89a;--accent2:#8fbc8f;
+  --run:#5b9bd5;--gym:#9b7dd4;--golf:#6ab187;--race:#d4706a;--office:#d4a84b;
+  --serif:'DM Serif Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --r:14px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:15px;background:var(--bg)}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:.5px solid var(--border2);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 6px;cursor:pointer;gap:3px;border:none;background:none;color:var(--text3);font-family:var(--sans);font-size:10px;transition:color .2s}
+.nav-item.active{color:var(--accent)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+.page{display:none;padding:16px;max-width:520px;margin:0 auto}
+.page.active{display:block}
+.ph{margin-bottom:18px;padding-top:8px}
+.ph h1{font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.15}
+.ph p{font-size:13px;color:var(--text2);margin-top:4px}
+
+.card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat{background:var(--bg3);border-radius:var(--r-sm);padding:10px 12px}
+.stat .lbl{font-size:11px;color:var(--text3);margin-bottom:3px}
+.stat .val{font-size:22px;font-weight:500;color:var(--text)}
+.stat .sub{font-size:11px;color:var(--text2);margin-top:2px}
+
+.prog-wrap{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin:8px 0}
+.prog-bar{height:5px;border-radius:3px;transition:width .6s}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.p-run{background:rgba(91,155,213,.18);color:#7eb8e8}
+.p-tent{background:rgba(200,164,90,.15);color:#d4b06a;border:.5px dashed rgba(200,164,90,.4)}
+.p-gym{background:rgba(155,125,212,.15);color:#b89ee0}
+.p-golf{background:rgba(106,177,135,.15);color:#8fd4ab}
+.p-rest{background:rgba(90,85,80,.2);color:var(--text2)}
+.p-office{background:rgba(212,168,75,.15);color:#e0ba68}
+.p-sync{background:rgba(143,188,143,.12);color:#8fbc8f;font-size:10px}
+.p-nosync{background:rgba(212,112,106,.12);color:#d4706a;font-size:10px}
+
+.sec{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px}
+
+.day-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px}
+.day-card.today{border-color:var(--accent);background:rgba(200,184,154,.04)}
+.day-card.is-office{border-left:3px solid var(--office)}
+.day-card.is-tent{border-left:3px dashed rgba(200,164,90,.5)}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dn{font-size:13px;font-weight:500}
+.dd{font-size:11px;color:var(--text3)}
+.dpills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.dnote{font-size:12px;color:var(--text3);line-height:1.5}
+.wake-tag{font-size:10px;background:rgba(200,184,154,.1);color:var(--accent);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:6px}
+
+.dp-row{display:flex;justify-content:space-between;gap:4px;margin-bottom:14px}
+.dp-btn{flex:1;height:44px;border-radius:var(--r-sm);border:.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s}
+.dp-btn .dsub{font-size:9px;color:var(--text3)}
+.dp-btn.on{background:rgba(212,168,75,.15);border-color:var(--office);color:#e0ba68}
+
+.wx-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px}
+.wx-strip::-webkit-scrollbar{display:none}
+.wx-chip{background:var(--bg3);border:.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;text-align:center;flex-shrink:0;min-width:52px}
+.wx-chip.wet{border-color:rgba(91,155,213,.5);background:rgba(91,155,213,.08)}
+.wx-chip.tent{border-color:rgba(200,164,90,.4);background:rgba(200,164,90,.06)}
+.wx-chip.ok{border-color:rgba(143,188,143,.3)}
+.wx-day{font-size:10px;color:var(--text3);margin-bottom:3px}
+.wx-icon{font-size:17px;line-height:1.2}
+.wx-pct{font-size:10px;margin-top:2px}
+
+.wk-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.wn-btn{background:var(--bg3);border:.5px solid var(--border2);color:var(--text2);padding:7px 14px;border-radius:var(--r-sm);font-size:13px;font-family:var(--sans);cursor:pointer}
+
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px}
+input[type=text],input[type=password],select,textarea{width:100%;background:var(--bg3);border:.5px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 12px;outline:none;transition:border-color .15s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{height:80px;resize:none;line-height:1.5}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9590' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select option{background:var(--bg3)}
+
+.btn{width:100%;padding:13px;font-size:14px;font-weight:500;font-family:var(--sans);border-radius:var(--r-sm);cursor:pointer;transition:all .15s;border:none;margin-top:14px;background:var(--accent);color:#1a1510}
+.btn:active{transform:scale(.98)}
+.btn-ghost{background:transparent;color:var(--text2);border:.5px solid var(--border2)}
+.btn-sm{padding:7px 14px;font-size:12px;width:auto;margin-top:0;border-radius:20px}
+.btn-danger{background:transparent;color:var(--race);border:.5px solid rgba(212,112,106,.3)}
+
+.mood-row{display:flex;gap:5px;margin-top:6px}
+.mood-btn{flex:1;padding:9px 4px;border-radius:var(--r-sm);border:.5px solid var(--border2);background:var(--bg3);font-family:var(--sans);font-size:18px;cursor:pointer;text-align:center;transition:all .15s}
+.mood-btn.sel{border-color:var(--accent);background:rgba(200,184,154,.1)}
+.mood-lbl{font-size:9px;display:block;color:var(--text3);margin-top:2px}
+
+.rtab{padding:7px 14px;font-size:12px;border-radius:20px;cursor:pointer;font-family:var(--sans);border:.5px solid var(--border2);background:transparent;color:var(--text2);transition:all .15s}
+.rtab.on{background:var(--accent);color:#1a1510;border-color:transparent}
+.rtabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+
+.food-block{margin-bottom:16px}
+.food-hdr{font-size:12px;font-weight:500;color:var(--accent);border-bottom:.5px solid var(--border);padding-bottom:5px;margin-bottom:6px}
+.food-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:.5px solid var(--border);gap:8px}
+.food-row:last-child{border-bottom:none}
+.food-name{font-size:13px;color:var(--text);flex:1}
+.food-desc{font-size:11px;color:var(--text3);text-align:right;max-width:160px;line-height:1.4;flex-shrink:0}
+.diet-tip{background:rgba(200,184,154,.07);border:.5px solid rgba(200,184,154,.2);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-top:8px;line-height:1.6}
+
+.goal-item{background:var(--bg3);border:.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px}
+.entry-item{border-bottom:.5px solid var(--border);padding:12px 0}
+.entry-item:last-child{border-bottom:none}
+.entry-date{font-size:11px;color:var(--text3);margin-bottom:4px}
+.entry-txt{font-size:13px;color:var(--text2);line-height:1.6}
+.entry-tag{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg4);color:var(--text3)}
+
+.race-banner{background:linear-gradient(135deg,rgba(212,112,106,.12),rgba(155,125,212,.08));border:.5px solid rgba(212,112,106,.3);border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center}
+.race-days{font-family:var(--serif);font-size:52px;color:var(--race);line-height:1}
+
+.prompt-card{background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--text2);font-style:italic;line-height:1.6}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+
+/* SYNC STATUS BAR */
+.sync-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:.5px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:12px}
+.sync-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--accent2)}
+.sync-dot.err{background:var(--race)}
+.sync-dot.spin{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.setup-box{background:var(--bg3);border:.5px solid rgba(200,184,154,.25);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.setup-step{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.setup-num{width:22px;height:22px;border-radius:50%;background:rgba(200,184,154,.15);color:var(--accent);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.setup-text{font-size:13px;color:var(--text2);line-height:1.6;flex:1}
+.setup-text a{color:var(--accent);text-decoration:none}
+.setup-text code{background:var(--bg4);color:var(--accent);padding:1px 5px;border-radius:4px;font-size:12px}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#1a1510;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;z-index:200;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- HOME -->
+<div class="page active" id="p-home">
+  <div class="ph">
+    <h1 id="home-greeting">Good morning</h1>
+    <p id="home-date"></p>
+  </div>
+  <div id="sync-bar-home" class="sync-bar">
+    <div class="sync-status"><div class="sync-dot" id="sdot-home"></div><span id="slabel-home">Not connected</span></div>
+    <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="goPage('settings')">Setup sync</button>
+  </div>
+  <div class="race-banner">
+    <div class="race-days" id="race-days">—</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px">days to Run Melbourne · 19 Jul 2026</div>
+    <div style="margin-top:10px">
+      <div class="prog-wrap" style="background:rgba(255,255,255,.08)"><div class="prog-bar" id="race-prog" style="background:var(--race)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px">
+        <span style="font-size:10px;color:var(--text3)">17 May</span>
+        <span id="race-pct" style="font-size:10px;color:var(--text3)"></span>
+        <span style="font-size:10px;color:var(--text3)">19 Jul</span>
+      </div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="stat"><div class="lbl">Daily goal</div><div class="val">6:00 am</div><div class="sub">wake-up every day</div></div>
+    <div class="stat"><div class="lbl">Active goals</div><div class="val" id="stat-goals">—</div><div class="sub">in progress</div></div>
+  </div>
+  <div class="sec">Today</div>
+  <div id="today-card"></div>
+  <div class="sec">How are you feeling?</div>
+  <div class="card">
+    <div class="mood-row" id="quick-mood">
+      <button class="mood-btn" data-v="1" onclick="quickMood(1)">😴<span class="mood-lbl">Low</span></button>
+      <button class="mood-btn" data-v="2" onclick="quickMood(2)">😐<span class="mood-lbl">Okay</span></button>
+      <button class="mood-btn" data-v="3" onclick="quickMood(3)">🙂<span class="mood-lbl">Good</span></button>
+      <button class="mood-btn" data-v="4" onclick="quickMood(4)">😄<span class="mood-lbl">Great</span></button>
+      <button class="mood-btn" data-v="5" onclick="quickMood(5)">🔥<span class="mood-lbl">Fired</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="page" id="p-schedule">
+  <div class="ph">
+    <h1>Schedule</h1>
+    <p>2 runs/week · lowest-rain days · confirmed &lt;20% · tentative 20–49%</p>
+  </div>
+  <div class="sec">Melbourne weather this week</div>
+  <div class="wx-strip" id="wx-strip"></div>
+  <div class="legend">
+    <span class="pill p-run" style="font-size:10px">Run &lt;20% rain</span>
+    <span class="pill p-tent" style="font-size:10px">(Run) tentative</span>
+    <span class="pill p-gym" style="font-size:10px">Gym</span>
+    <span class="pill p-golf" style="font-size:10px">Golf range</span>
+    <span class="pill p-office" style="font-size:10px">Office</span>
+  </div>
+  <div class="sec">Office days — tap to toggle</div>
+  <div class="dp-row" id="day-picker"></div>
+  <div class="wk-nav">
+    <button class="wn-btn" onclick="shiftWeek(-1)">← Prev</button>
+    <span style="font-size:13px;font-weight:500" id="wn-label"></span>
+    <button class="wn-btn" onclick="shiftWeek(1)">Next →</button>
+  </div>
+  <div id="sched-days"></div>
+</div>
+
+<!-- DIET -->
+<div class="page" id="p-diet">
+  <div class="ph">
+    <h1>Diet guide</h1>
+    <p>Vegetarian · tuna · eggs · matched to your day</p>
+  </div>
+  <div class="rtabs" id="diet-tabs">
+    <button class="rtab on" onclick="dietTab('run')">Run day</button>
+    <button class="rtab" onclick="dietTab('gym')">Gym day</button>
+    <button class="rtab" onclick="dietTab('golf')">Golf day</button>
+    <button class="rtab" onclick="dietTab('rest')">Rest day</button>
+    <button class="rtab" onclick="dietTab('race')">Race week</button>
+  </div>
+  <div id="diet-content"></div>
+</div>
+
+<!-- REFLECT -->
+<div class="page" id="p-reflect">
+  <div class="ph"><h1>Reflect</h1><p>Journal · goals · self-improvement</p></div>
+  <div class="rtabs" id="reflect-tabs">
+    <button class="rtab on" onclick="reflectTab('journal')">Journal</button>
+    <button class="rtab" onclick="reflectTab('goals')">Goals</button>
+    <button class="rtab" onclick="reflectTab('mood')">Mood</button>
+  </div>
+  <div id="r-journal">
+    <div class="sec">This week's prompts</div>
+    <div id="weekly-prompts"></div>
+    <div class="sec">New entry</div>
+    <div class="card">
+      <label>Date</label><input type="text" id="j-date">
+      <label>Reflection</label><textarea id="j-text" placeholder="What happened? What are you proud of? What needs work?"></textarea>
+      <label>Energy this week</label>
+      <div class="mood-row" id="j-mood-row">
+        <button class="mood-btn" data-v="1" onclick="selJMood(1)">😴<span class="mood-lbl">Low</span></button>
+        <button class="mood-btn" data-v="2" onclick="selJMood(2)">😐<span class="mood-lbl">Okay</span></button>
+        <button class="mood-btn" data-v="3" onclick="selJMood(3)">🙂<span class="mood-lbl">Good</span></button>
+        <button class="mood-btn" data-v="4" onclick="selJMood(4)">😄<span class="mood-lbl">Great</span></button>
+        <button class="mood-btn" data-v="5" onclick="selJMood(5)">🔥<span class="mood-lbl">On fire</span></button>
+      </div>
+      <label>Tags</label>
+      <input type="text" id="j-tags" placeholder="e.g. running, golf, work">
+      <button class="btn" onclick="saveJournal()">Save entry</button>
+    </div>
+    <div class="sec">Past entries</div>
+    <div id="journal-list"></div>
+  </div>
+  <div id="r-goals" style="display:none">
+    <div class="sec">Add a goal</div>
+    <div class="card">
+      <label>Goal</label><input type="text" id="g-title" placeholder="e.g. Wake at 6 am every day for 30 days">
+      <label>Category</label>
+      <select id="g-cat">
+        <option>Running</option><option>Gym</option><option>Golf</option>
+        <option>AI & Learning</option><option>Finance</option>
+        <option>Career</option><option>Personal</option><option>Health</option>
+      </select>
+      <label>Target date</label><input type="text" id="g-date" placeholder="e.g. 19 Jul 2026">
+      <label>Why this matters</label><input type="text" id="g-note" placeholder="Your reason...">
+      <button class="btn" onclick="saveGoal()">Add goal</button>
+    </div>
+    <div class="sec">Your goals</div>
+    <div id="goals-list"></div>
+  </div>
+  <div id="r-mood" style="display:none">
+    <div class="sec">Energy trend</div>
+    <div class="card"><canvas id="mood-chart" height="110"></canvas></div>
+    <div class="sec">Recent check-ins</div>
+    <div id="mood-list"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="p-settings">
+  <div class="ph"><h1>Settings</h1><p>Sync · preferences · data</p></div>
+
+  <div class="sec">GitHub sync setup</div>
+  <div id="sync-setup-done" style="display:none">
+    <div class="sync-bar">
+      <div class="sync-status"><div class="sync-dot ok" id="sdot-settings"></div><span id="slabel-settings">Connected</span></div>
+      <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="syncNow()">Sync now</button>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Your data syncs automatically every time you save anything. All devices reading the same Gist file.</div>
+      <button class="btn btn-ghost" onclick="disconnectSync()">Disconnect sync</button>
+    </div>
+  </div>
+
+  <div id="sync-setup-form">
+    <div class="setup-box">
+      <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:14px">5-minute setup · free · you own your data</div>
+      <div class="setup-step">
+        <div class="setup-num">1</div>
+        <div class="setup-text">Go to <a href="https://github.com" target="_blank">github.com</a> and create a free account (or sign in).</div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-num">2</div>
+        <div class="setup-text">Go to <a href="https://gist.github.com" target="_blank">gist.github.com</a> → click <strong>+</strong> (New gist) → filename: <code>dashboard.json</code> → content: <code>{}</code> → set to <strong>Secret</strong> → Create.</div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-num">3</div>
+        <div class="setup-text">Copy the Gist ID from the URL: <code>gist.github.com/yourname/<strong>abc123...</strong></code></div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-num">4</div>
+        <div class="setup-text">Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a> → Note: "Dashboard" → Expiration: No expiration → tick <strong>gist</strong> scope → Generate → copy the token.</div>
+      </div>
+      <div class="setup-step">
+        <div class="setup-num">5</div>
+        <div class="setup-text">Paste both below and tap Connect. Done — paste the same values on any other device.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="s-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <label>Gist ID</label>
+      <input type="text" id="s-gist" placeholder="abc123def456...">
+      <button class="btn" onclick="connectSync()">Connect and sync</button>
+      <div id="sync-connect-msg" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
+    </div>
+  </div>
+
+  <div class="sec">Preferences</div>
+  <div class="card">
+    <label>Your name</label>
+    <input type="text" id="s-name" placeholder="e.g. James">
+    <button class="btn" onclick="saveName()">Save name</button>
+  </div>
+
+  <div class="sec">Data</div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Export a backup of all your data at any time.</div>
+    <button class="btn btn-ghost" onclick="exportData()">Export backup (JSON)</button>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="clearData()">Clear all local data</button>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-home" onclick="goPage('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/></svg>Home
+  </button>
+  <button class="nav-item" id="nav-schedule" onclick="goPage('schedule')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Schedule
+  </button>
+  <button class="nav-item" id="nav-diet" onclick="goPage('diet')">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M8 12h8M12 8v8"/></svg>Diet
+  </button>
+  <button class="nav-item" id="nav-reflect" onclick="goPage('reflect')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Reflect
+  </button>
+  <button class="nav-item" id="nav-settings" onclick="goPage('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
+  </button>
+</nav>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const SK = 'mydash_v3';
+const SYNC_SK = 'mydash_sync_v1';
+const RACE_DATE = new Date('2026-07-19');
+const START_DATE = new Date('2026-05-17');
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+// ─── WEATHER (seeded from live Melbourne API, Mon–Thu actual, Fri–Sun estimated) ───
+const SEED_WX = [
+  {rain:25, icon:'🌤'},  // Mon
+  {rain:25, icon:'🌤'},  // Tue
+  {rain:35, icon:'🌦'},  // Wed
+  {rain:10, icon:'☀️'},  // Thu
+  {rain:40, icon:'🌧'},  // Fri
+  {rain:50, icon:'🌧'},  // Sat
+  {rain:30, icon:'🌦'},  // Sun
+];
+let weekOffset = 0;
+let WX = [];
+
+// ─── GITHUB GIST SYNC ────────────────────────────────────────────────────────
+function loadSyncCfg() {
+  try { return JSON.parse(localStorage.getItem(SYNC_SK) || 'null'); } catch(e) { return null; }
+}
+function saveSyncCfg(cfg) {
+  try { localStorage.setItem(SYNC_SK, JSON.stringify(cfg)); } catch(e) {}
+}
+
+let syncCfg = null;
+let lastSynced = null;
+
+async function gistFetch(method, body) {
+  if (!syncCfg) return null;
+  try {
+    const opts = {
+      method,
+      headers: {
+        'Authorization': 'token ' + syncCfg.token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch('https://api.github.com/gists/' + syncCfg.gistId, opts);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function syncPull() {
+  setSyncStatus('spin', 'Syncing…');
+  const gist = await gistFetch('GET');
+  if (!gist) { setSyncStatus('err', 'Sync failed'); return false; }
+  try {
+    const raw = gist.files['dashboard.json']?.content;
+    if (raw && raw !== '{}') {
+      const remote = JSON.parse(raw);
+      // Merge strategy: remote wins if it has newer entries
+      const local = getData();
+      const merged = mergeData(local, remote);
+      saveLocal(merged);
+    }
+    lastSynced = new Date();
+    setSyncStatus('ok', 'Synced ' + lastSynced.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'}));
+    return true;
+  } catch(e) {
+    setSyncStatus('err', 'Sync error');
+    return false;
+  }
+}
+
+async function syncPush() {
+  if (!syncCfg) return;
+  const data = getData();
+  const body = {
+    files: { 'dashboard.json': { content: JSON.stringify(data) } }
+  };
+  const res = await gistFetch('PATCH', body);
+  if (res) {
+    lastSynced = new Date();
+    setSyncStatus('ok', 'Saved & synced ' + lastSynced.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'}));
+  } else {
+    setSyncStatus('err', 'Save failed — check connection');
+  }
+}
+
+function mergeData(local, remote) {
+  // Journal: merge by timestamp, deduplicate
+  const allJ = [...(local.journal || []), ...(remote.journal || [])];
+  const jMap = {};
+  allJ.forEach(e => { jMap[e.ts] = e; });
+  const journal = Object.values(jMap).sort((a,b) => a.ts - b.ts);
+
+  // Goals: merge by timestamp
+  const allG = [...(local.goals || []), ...(remote.goals || [])];
+  const gMap = {};
+  allG.forEach(g => { gMap[g.ts] = g; });
+  const goals = Object.values(gMap).sort((a,b) => a.ts - b.ts);
+
+  // Moods: merge by date key
+  const allM = [...(local.moods || []), ...(remote.moods || [])];
+  const mMap = {};
+  allM.forEach(m => { mMap[m.date] = m; });
+  const moods = Object.values(mMap).sort((a,b) => a.ts - b.ts);
+
+  // Office: remote wins (most recently set)
+  const office = remote.office && remote.office.length ? remote.office : (local.office || []);
+  const name = remote.name || local.name || '';
+
+  return { journal, goals, moods, office, name };
+}
+
+function setSyncStatus(state, label) {
+  ['home','settings'].forEach(id => {
+    const dot = document.getElementById('sdot-' + id);
+    const lbl = document.getElementById('slabel-' + id);
+    if (dot) { dot.className = 'sync-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : state === 'spin' ? ' spin' : ''); }
+    if (lbl) lbl.textContent = label;
+  });
+}
+
+async function connectSync() {
+  const token = document.getElementById('s-token').value.trim();
+  const gistId = document.getElementById('s-gist').value.trim();
+  const msg = document.getElementById('sync-connect-msg');
+  if (!token || !gistId) { msg.textContent = 'Enter both token and Gist ID'; return; }
+  msg.textContent = 'Connecting…';
+  syncCfg = { token, gistId };
+  saveSyncCfg(syncCfg);
+  const ok = await syncPull();
+  if (ok) {
+    msg.textContent = '';
+    renderSyncUI();
+    toast('Sync connected!');
+    renderHome();
+  } else {
+    syncCfg = null;
+    saveSyncCfg(null);
+    msg.textContent = 'Could not connect — check token and Gist ID';
+    setSyncStatus('err', 'Not connected');
+  }
+}
+
+function disconnectSync() {
+  if (!confirm('Disconnect sync? Your local data stays.')) return;
+  syncCfg = null;
+  saveSyncCfg(null);
+  renderSyncUI();
+  setSyncStatus('', 'Not connected');
+  toast('Sync disconnected');
+}
+
+async function syncNow() {
+  await syncPull();
+  renderHome();
+  if (document.getElementById('p-reflect').classList.contains('active')) {
+    renderJournal(); renderGoals(); renderMoodHistory();
+  }
+}
+
+function renderSyncUI() {
+  const connected = !!syncCfg;
+  document.getElementById('sync-setup-done').style.display = connected ? 'block' : 'none';
+  document.getElementById('sync-setup-form').style.display = connected ? 'none' : 'block';
+  if (connected) {
+    document.getElementById('s-token').value = '';
+    document.getElementById('s-gist').value = '';
+  }
+}
+
+// ─── LOCAL DATA ──────────────────────────────────────────────────────────────
+function loadLocal() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch(e) { return {}; } }
+function saveLocal(d) { try { localStorage.setItem(SK, JSON.stringify(d)); } catch(e) {} }
+function getData() {
+  const d = loadLocal();
+  d.office = d.office || [];
+  d.journal = d.journal || [];
+  d.goals = d.goals || [];
+  d.moods = d.moods || [];
+  d.name = d.name || '';
+  return d;
+}
+async function save(d) {
+  saveLocal(d);
+  await syncPush();
+}
+
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function today() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+function fmtS(d) { return d.toLocaleDateString('en-AU', {day:'numeric', month:'short'}); }
+function isToday(d) { return d.toDateString() === today().toDateString(); }
+function getMon(off) {
+  const t = today(), dow = t.getDay(), m = new Date(t);
+  m.setDate(t.getDate() - (dow === 0 ? 6 : dow - 1) + off * 7);
+  return m;
+}
+function getWeekDates(off) {
+  const m = getMon(off);
+  return DAYS.map((_,i) => { const d = new Date(m); d.setDate(m.getDate()+i); return d; });
+}
+
+// ─── WEATHER ─────────────────────────────────────────────────────────────────
+function initWX() {
+  const mon = getMon(weekOffset);
+  WX = SEED_WX.map((w,i) => {
+    const d = new Date(mon); d.setDate(mon.getDate()+i);
+    return { ...w, date: d.toISOString().split('T')[0], dow: i };
+  });
+}
+function rainFor(dateStr) { const w = WX.find(x => x.date === dateStr); return w != null ? w.rain : 30; }
+function runStatus(dateStr) {
+  const r = rainFor(dateStr);
+  if (r < 20) return 'confirmed';
+  if (r < 50) return 'tentative';
+  return 'blocked';
+}
+
+// ─── SCHEDULE BUILDER ────────────────────────────────────────────────────────
+// Rules:
+// 1. Office → no fitness
+// 2. Golf → sole activity that day
+// 3. Long run → weekend only, lowest-rain weekend day
+// 4. Short run → Tue OR Thu only, 1 per week, lowest rain of the two
+// 5. Run confirmed <20%, tentative 20-49%, blocked 50%+ (→ gym)
+// 6. All gym = Upper 1 / Upper 2 alternating, no legs
+// 7. 6am tag on all fitness days
+function buildSched(dates, officeDays) {
+  const slots = dates.map((date,i) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return { date, dateStr, day: DAYS[i], isOffice: officeDays.includes(DAYS[i]),
+      activity: null, label: '', note: '', wake: false, tent: false };
+  });
+  const free = slots.filter(s => !s.isOffice);
+
+  // GOLF — wetter of the two weekend days, so the drier one can be long run
+  let golfSlot = null;
+  const sat = free.find(s => s.day === 'Sat');
+  const sun = free.find(s => s.day === 'Sun');
+  if (sat && sun) {
+    golfSlot = rainFor(sat.dateStr) >= rainFor(sun.dateStr) ? sat : sun;
+  } else {
+    golfSlot = sat || sun || free.find(s => !['Tue','Thu'].includes(s.day));
+  }
+  if (golfSlot) {
+    golfSlot.activity = 'golf';
+    golfSlot.label = 'Golf range';
+    golfSlot.note = 'Golf range · sole activity today · any weather fine';
+    golfSlot.wake = false;
+  }
+
+  // LONG RUN — drier weekend day
+  const lrCands = free.filter(s => ['Sat','Sun'].includes(s.day) && s !== golfSlot);
+  lrCands.sort((a,b) => rainFor(a.dateStr) - rainFor(b.dateStr));
+  const lr = lrCands[0] || null;
+  if (lr) {
+    const rs = runStatus(lr.dateStr);
+    lr.wake = true;
+    if (rs === 'blocked') {
+      lr.activity = 'gym'; lr.label = 'Upper 1';
+      lr.note = 'Long run blocked (50%+ rain) · Upper 1 instead';
+    } else {
+      lr.activity = 'run'; lr.tent = rs === 'tentative'; lr.label = 'Long run';
+      lr.note = rs === 'confirmed'
+        ? 'Long run · 6 am · key session · Runna · confirmed (rain <20%)'
+        : '(Long run) · tentative · check morning forecast · rain ' + rainFor(lr.dateStr) + '%';
+    }
+  }
+
+  // SHORT RUN — best of Tue/Thu, 1 only
+  const srCands = free.filter(s => ['Tue','Thu'].includes(s.day) && !s.activity);
+  srCands.sort((a,b) => rainFor(a.dateStr) - rainFor(b.dateStr));
+  if (srCands.length) {
+    const sr = srCands[0];
+    const rs = runStatus(sr.dateStr);
+    sr.wake = true;
+    if (rs === 'blocked') {
+      sr.activity = 'gym'; sr.label = 'Upper 2';
+      sr.note = 'Run blocked (50%+ rain) · Upper 2 instead';
+    } else {
+      sr.activity = 'run'; sr.tent = rs === 'tentative'; sr.label = 'Easy run';
+      sr.note = rs === 'confirmed'
+        ? 'Easy run · 6 am · Runna · confirmed (rain <20%)'
+        : '(Easy run) · tentative · check morning forecast · rain ' + rainFor(sr.dateStr) + '%';
+    }
+  }
+
+  // GYM — all remaining free days, Upper 1 / Upper 2 alternating
+  const gymNotes = { 'Upper 1': 'Chest / shoulders / triceps · Hevy · 6 am', 'Upper 2': 'Back / biceps / rear delts · Hevy · 6 am' };
+  let gymIdx = slots.some(s => s.label === 'Upper 1') ? 1 : 0;
+  free.filter(s => !s.activity).forEach(s => {
+    s.activity = 'gym';
+    s.label = gymIdx % 2 === 0 ? 'Upper 1' : 'Upper 2';
+    s.note = gymNotes[s.label];
+    s.wake = true;
+    gymIdx++;
+  });
+
+  slots.filter(s => s.isOffice).forEach(s => {
+    s.activity = 'office'; s.note = 'In office · rest and recover today';
+  });
+  return slots;
+}
+
+// ─── PAGE NAV ────────────────────────────────────────────────────────────────
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('p-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'home') renderHome();
+  if (name === 'schedule') renderSchedule();
+  if (name === 'diet') renderDiet('run');
+  if (name === 'reflect') { renderJournal(); renderGoals(); renderMoodHistory(); }
+  if (name === 'settings') {
+    renderSyncUI();
+    const d = getData();
+    document.getElementById('s-name').value = d.name || '';
+  }
+}
+
+// ─── HOME ────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const d = getData();
+  const now = new Date(), h = now.getHours();
+  const name = d.name ? ', ' + d.name : '';
+  document.getElementById('home-greeting').textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + name;
+  document.getElementById('home-date').textContent = now.toLocaleDateString('en-AU', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const daysLeft = Math.max(0, Math.ceil((RACE_DATE - now) / 86400000));
+  document.getElementById('race-days').textContent = daysLeft;
+  const pct = Math.min(100, Math.max(0, Math.round((now - START_DATE) / (RACE_DATE - START_DATE) * 100)));
+  document.getElementById('race-prog').style.width = pct + '%';
+  document.getElementById('race-pct').textContent = pct + '% trained';
+  document.getElementById('stat-goals').textContent = (d.goals || []).filter(g => !g.done).length;
+
+  initWX();
+  const sched = buildSched(getWeekDates(0), d.office);
+  const tp = sched.find(s => isToday(s.date));
+  const tc = document.getElementById('today-card');
+  if (tp) {
+    let pill = '';
+    if (tp.isOffice) pill = `<span class="pill p-office">🏢 Office day</span>`;
+    else if (tp.activity === 'run') pill = tp.tent ? `<span class="pill p-tent">(${tp.label})</span>` : `<span class="pill p-run">${tp.label}</span>`;
+    else if (tp.activity === 'gym') pill = `<span class="pill p-gym">${tp.label}</span>`;
+    else if (tp.activity === 'golf') pill = `<span class="pill p-golf">Golf range</span>`;
+    else pill = `<span class="pill p-rest">Rest</span>`;
+    const wakeHtml = tp.wake ? `<div class="wake-tag" style="margin-bottom:6px">⏰ 6:00 am wake-up</div>` : '';
+    const wx = WX.find(w => w.date === tp.dateStr);
+    const wxStr = wx ? `${wx.icon} ${wx.rain}% rain chance` : '';
+    tc.innerHTML = `<div class="day-card today" style="margin-bottom:0">
+      ${wakeHtml}
+      <div class="dh" style="margin-bottom:6px"><span class="dn">${tp.day}</span><span style="font-size:11px;color:var(--text3)">${wxStr}</span></div>
+      <div class="dpills">${pill}</div>
+      <div class="dnote">${tp.note}</div>
+    </div>`;
+  }
+  const todayMood = (d.moods || []).find(m => m.date === today().toISOString().split('T')[0]);
+  if (todayMood) document.querySelectorAll('#quick-mood .mood-btn').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.v) === todayMood.val));
+}
+
+function quickMood(val) {
+  const d = getData(), key = today().toISOString().split('T')[0];
+  d.moods = d.moods.filter(m => m.date !== key);
+  d.moods.push({date: key, val, ts: Date.now()});
+  save(d);
+  document.querySelectorAll('#quick-mood .mood-btn').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.v) === val));
+  toast('Check-in saved');
+}
+
+// ─── SCHEDULE ────────────────────────────────────────────────────────────────
+function renderSchedule() {
+  initWX();
+  const d = getData();
+  const dates = getWeekDates(weekOffset);
+  const sched = buildSched(dates, d.office);
+  document.getElementById('wn-label').textContent = fmtS(dates[0]) + ' – ' + fmtS(dates[6]);
+
+  const strip = document.getElementById('wx-strip');
+  strip.innerHTML = '';
+  WX.forEach(w => {
+    let cls = 'wx-chip' + (w.rain >= 50 ? ' wet' : w.rain >= 20 ? ' tent' : ' ok');
+    const pctC = w.rain >= 50 ? '#7eb8e8' : w.rain >= 20 ? '#d4b06a' : '#8fd4ab';
+    const chip = document.createElement('div');
+    chip.className = cls;
+    chip.innerHTML = `<div class="wx-day">${DAYS[w.dow].slice(0,3)}</div><div class="wx-icon">${w.icon}</div><div class="wx-pct" style="color:${pctC}">${w.rain}%</div>`;
+    strip.appendChild(chip);
+  });
+
+  const picker = document.getElementById('day-picker');
+  picker.innerHTML = '';
+  DAYS.forEach((day,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'dp-btn' + (d.office.includes(day) ? ' on' : '');
+    btn.innerHTML = `<span>${day[0]}</span><span class="dsub">${dates[i].getDate()}</span>`;
+    btn.onclick = () => {
+      const dd = getData();
+      if (dd.office.includes(day)) dd.office = dd.office.filter(x => x !== day);
+      else dd.office.push(day);
+      save(dd); renderSchedule(); renderHome();
+    };
+    picker.appendChild(btn);
+  });
+
+  const cont = document.getElementById('sched-days');
+  cont.innerHTML = '';
+  sched.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'day-card' + (isToday(s.date) ? ' today' : '') + (s.isOffice ? ' is-office' : '') + (s.tent ? ' is-tent' : '');
+    let pill = '';
+    if (s.isOffice) pill = `<span class="pill p-office">🏢 Office</span>`;
+    else if (s.activity === 'run') pill = s.tent ? `<span class="pill p-tent">(${s.label})</span>` : `<span class="pill p-run">${s.label}</span>`;
+    else if (s.activity === 'gym') pill = `<span class="pill p-gym">${s.label}</span>`;
+    else if (s.activity === 'golf') pill = `<span class="pill p-golf">Golf range</span>`;
+    else pill = `<span class="pill p-rest">Rest</span>`;
+    const wakeHtml = s.wake ? `<div class="wake-tag">⏰ 6:00 am</div>` : '';
+    const todayBadge = isToday(s.date) ? `<span style="font-size:10px;background:rgba(200,184,154,.15);color:var(--accent);padding:2px 8px;border-radius:10px;margin-left:6px">today</span>` : '';
+    const wx = WX.find(w => w.date === s.dateStr);
+    const wxStr = wx ? `<span style="font-size:11px;color:${wx.rain>=50?'#7eb8e8':wx.rain>=20?'#d4b06a':'#8fd4ab'}">${wx.icon} ${wx.rain}%</span>` : '';
+    div.innerHTML = `
+      <div class="dh"><span class="dn">${s.day}${todayBadge}</span><div style="display:flex;align-items:center;gap:8px">${wxStr}<span class="dd">${fmtS(s.date)}</span></div></div>
+      ${wakeHtml}<div class="dpills">${pill}</div><div class="dnote">${s.note}</div>`;
+    cont.appendChild(div);
+  });
+}
+function shiftWeek(dir) { weekOffset += dir; renderSchedule(); }
+
+// ─── DIET ────────────────────────────────────────────────────────────────────
+const DIET = {
+  run:{title:'Run day',sub:'6 am start · fuel before, rebuild after',sections:[
+    {h:'Pre-run · 5:50 am — fast carbs only',rows:[['Banana or 3–4 dates','No fat or fibre · quick fuel'],['500 ml water','Hydrate before you leave']]},
+    {h:'Post-run breakfast',rows:[['2 eggs on wholegrain toast','Protein + complex carbs'],['Avocado (optional)','Healthy fat · satiety'],['Piece of fruit','Replenish glycogen'],['Coffee','Fine post-run · cut off by 1 pm']]},
+    {h:'Lunch',rows:[['Tuna salad bowl','Canned tuna + greens + olive oil + lemon'],['Brown rice or sweet potato','Refuel complex carbs'],['Hard boiled egg on the side','Extra protein if hungry']]},
+    {h:'Dinner',rows:[['Tuna pasta','Wholegrain pasta + tuna + tomato + spinach'],['Or: egg frittata','4 eggs + zucchini + feta'],['Or: lentil curry','Plant protein · anti-inflammatory']]},
+    {h:'Snacks',rows:[['Greek yoghurt + nuts','Protein + fat mid-afternoon'],['Apple + peanut butter','Sustained energy']]},
+  ],tip:'Hydration: 2–3 L today. Add electrolytes after long runs (10+ km). Avoid high-fibre foods 2 hours before running.'},
+  gym:{title:'Gym day',sub:'6 am start · Upper 1 or Upper 2 · protein priority',sections:[
+    {h:'Pre-gym · 5:50 am — optional',rows:[['Black coffee','Natural boost · no food needed'],['Small banana if hungry','Only if stomach demands it']]},
+    {h:'Post-gym breakfast',rows:[['2–3 scrambled eggs + avo toast','Gold standard · protein + fat + carb'],['Or: Greek yoghurt + granola + fruit','Quick if short on time'],['Or: omelette + cheese + spinach','High protein · lower carb']]},
+    {h:'Lunch',rows:[['Egg fried rice','2 eggs + brown rice + veg + soy'],['Or: tuna wrap','Tuna + hummus + cucumber + wholegrain'],['Or: chickpea salad','Chickpeas + feta + olive oil']]},
+    {h:'Dinner',rows:[['Tuna and veggie stir-fry','Tuna + broccoli + capsicum + rice'],['Or: egg curry','4 boiled eggs in spiced lentil-tomato base'],['Or: pasta + cheese + spinach','Simple · high protein']]},
+    {h:'Snacks',rows:[['Protein shake within 30 min post-gym','Whey or plant-based'],['Greek yoghurt or cottage cheese','Casein for overnight muscle repair'],['Hard boiled eggs','Keep 2–3 ready in fridge']]},
+  ],tip:'Protein at every meal on gym days. Eggs and tuna are excellent. Bigger dinner after Upper 2 — your back needs fuel.'},
+  golf:{title:'Golf day',sub:'Sole activity · light sustained energy',sections:[
+    {h:'Breakfast — unhurried',rows:[['2 eggs any style + wholegrain toast','No rush · sit and eat'],['Fruit + Greek yoghurt','Light and sustained'],['Coffee','Fine before golf']]},
+    {h:'Pre-range (optional)',rows:[['Banana or handful of nuts','Light energy only'],['Water bottle','Sip throughout the session']]},
+    {h:'Lunch',rows:[['Tuna salad or sandwich','Light · easy to digest'],['Or: egg and veggie wrap','Quick and nutritious']]},
+    {h:'Dinner',rows:[['Lentil or chickpea curry + rice','Plant protein · satisfying'],['Or: frittata + roasted veg','Easy · good protein']]},
+  ],tip:'Golf is lower intensity but still burns energy. Stay hydrated. Avoid alcohol before the range.'},
+  rest:{title:'Rest day',sub:'Recovery focus · protein maintained · carbs slightly lower',sections:[
+    {h:'Breakfast — no alarm needed',rows:[['Eggs your way + toast','Eat when naturally hungry'],['Or: yoghurt + fruit + seeds','Light and easy'],['Coffee at leisure','Enjoy it']]},
+    {h:'Lunch',rows:[['Tuna nicoise salad','Tuna + boiled egg + beans + olives'],['Or: veggie soup + bread','Warming · easy on digestion']]},
+    {h:'Dinner',rows:[['Egg and vegetable frittata','4 eggs + whatever veg is in the fridge'],['Or: pasta + tuna + olives','Simple and satisfying'],['Or: dal and rice','High protein plant-based']]},
+    {h:'Snacks',rows:[['Nuts and fruit','Light · no pressure'],['Dark chocolate (small piece)','Antioxidants · you earned it']]},
+  ],tip:'Rest is where adaptation happens. Keep protein up. Prioritise sleep. If you wake at 6 am, use it for journaling or reading.'},
+  race:{title:'Race week · 13–19 Jul',sub:'Carb-load · protect your gut · nothing new',sections:[
+    {h:'Mon–Wed · increase carbs',rows:[['Bigger rice, pasta, sweet potato portions','Carb-load at lunch and dinner'],['Steady protein','Eggs and tuna as normal'],['Reduce raw fibre slightly','Easier digestion pre-race']]},
+    {h:'Thu–Fri · dial in',rows:[['Pasta dinner Thursday','Classic carb-load · tomato-based only'],['Normal breakfast Friday','Nothing new or experimental'],['No alcohol all week','Critical for sleep and hydration']]},
+    {h:'Race eve · Sat 18 Jul',rows:[['Early pasta dinner 6–7 pm','Tuna or plain cheese · familiar only'],['Water all day · no coffee after 2 pm','Sleep is the priority'],['Clothes out · asleep by 9:30 pm','Race alarm at 5:00 am']]},
+    {h:'Race morning · Sun 19 Jul',rows:[['5:00 am · wake + 500 ml water','Hydrate immediately'],['5:15 am · banana + toast + peanut butter','Tested in training · no surprises'],['6:00 am · leave for Batman Avenue','Arrive early to warm up'],['Gels or dates during race','Every 45–60 min from 7 km onwards']]},
+  ],tip:'Golden rule: do not eat anything on race morning you have not already eaten before a training run. Stick to what you know.'},
+};
+let activeDiet = 'run';
+function dietTab(tab) {
+  activeDiet = tab;
+  const tabs = ['run','gym','golf','rest','race'];
+  document.querySelectorAll('#diet-tabs .rtab').forEach((b,i) => {
+    const on = tabs[i] === tab;
+    b.classList.toggle('on', on);
+    b.style.cssText = on ? 'background:var(--accent);color:#1a1510;border-color:transparent' : 'background:transparent;color:var(--text2);border:.5px solid var(--border2)';
+  });
+  renderDiet(tab);
+}
+function renderDiet(tab) {
+  const data = DIET[tab]; if (!data) return;
+  let html = `<div class="card" style="margin-bottom:10px"><div style="font-size:16px;font-weight:500;margin-bottom:2px">${data.title}</div><div style="font-size:12px;color:var(--text2)">${data.sub}</div></div>`;
+  data.sections.forEach(s => {
+    html += `<div class="food-block"><div class="food-hdr">${s.h}</div>`;
+    s.rows.forEach(([n,desc]) => html += `<div class="food-row"><span class="food-name">${n}</span><span class="food-desc">${desc}</span></div>`);
+    html += `</div>`;
+  });
+  html += `<div class="diet-tip">${data.tip}</div>`;
+  document.getElementById('diet-content').innerHTML = html;
+}
+
+// ─── REFLECT ─────────────────────────────────────────────────────────────────
+const PROMPTS = [
+  'What did you do this week that you\'re genuinely proud of?',
+  'Where did you fall short, and what would you do differently?',
+  'How is your training feeling — body and mind?',
+  'What\'s one thing you learned or discovered this week?',
+  'How are your goals progressing? Any adjustments needed?',
+  'What did you do for recovery? Was it enough?',
+  'What is your single biggest focus for next week?',
+  'Are you waking at 6 am consistently? What\'s helping or hindering?',
+  'How is your diet supporting your energy and training?',
+  'What one habit do you want to build or break this month?',
+];
+function renderJournal() {
+  const d = getData();
+  const wk = Math.floor((today() - START_DATE) / 604800000);
+  document.getElementById('weekly-prompts').innerHTML = [0,3,6].map(off => `<div class="prompt-card">${PROMPTS[(wk+off)%PROMPTS.length]}</div>`).join('');
+  document.getElementById('j-date').value = today().toLocaleDateString('en-AU', {weekday:'short',day:'numeric',month:'short'});
+  const mE = ['','😴','😐','🙂','😄','🔥'];
+  const list = document.getElementById('journal-list');
+  if (!d.journal.length) { list.innerHTML = '<div class="empty">No entries yet — write your first reflection</div>'; return; }
+  list.innerHTML = d.journal.slice().reverse().map(e => `
+    <div class="entry-item">
+      <div class="entry-date">${e.date}${e.mood ? ' · ' + mE[e.mood] : ''}</div>
+      <div class="entry-txt">${e.text}</div>
+      ${e.tags && e.tags.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${e.tags.map(t => `<span class="entry-tag">${t}</span>`).join('')}</div>` : ''}
+    </div>`).join('');
+}
+let jMood = 0;
+function selJMood(v) { jMood = v; document.querySelectorAll('#j-mood-row .mood-btn').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.v) === v)); }
+function saveJournal() {
+  const text = document.getElementById('j-text').value.trim();
+  if (!text) { toast('Write something first'); return; }
+  const d = getData();
+  const tags = document.getElementById('j-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  d.journal.push({date: document.getElementById('j-date').value, text, mood: jMood, tags, ts: Date.now()});
+  save(d);
+  document.getElementById('j-text').value = ''; document.getElementById('j-tags').value = '';
+  jMood = 0; document.querySelectorAll('#j-mood-row .mood-btn').forEach(b => b.classList.remove('sel'));
+  toast('Entry saved'); renderJournal();
+}
+function renderGoals() {
+  const d = getData(), list = document.getElementById('goals-list');
+  if (!d.goals.length) { list.innerHTML = '<div class="empty">No goals yet</div>'; return; }
+  const cc = {Running:'var(--run)',Gym:'var(--gym)',Golf:'var(--golf)','AI & Learning':'#b89ee0',Finance:'#e0ba68',Career:'#e0ba68',Personal:'var(--accent)',Health:'var(--accent2)'};
+  list.innerHTML = d.goals.map((g,i) => `
+    <div class="goal-item" style="opacity:${g.done?.5:1}">
+      <div style="font-size:10px;color:${cc[g.cat]||'var(--accent)'};text-transform:uppercase;letter-spacing:.05em">${g.cat}</div>
+      <div style="font-size:13px;font-weight:500;margin:3px 0;text-decoration:${g.done?'line-through':'none'}">${g.title}</div>
+      ${g.date ? `<div style="font-size:11px;color:var(--text3)">Target: ${g.date}</div>` : ''}
+      ${g.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${g.note}</div>` : ''}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-sm btn-ghost" onclick="toggleGoal(${i})" style="color:var(--accent2);border-color:rgba(143,188,143,.3)">${g.done?'Reopen':'Mark done'}</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteGoal(${i})" style="color:var(--race);border-color:rgba(212,112,106,.3)">Remove</button>
+      </div>
+    </div>`).join('');
+}
+function saveGoal() {
+  const title = document.getElementById('g-title').value.trim();
+  if (!title) { toast('Add a goal title'); return; }
+  const d = getData();
+  d.goals.push({title, cat: document.getElementById('g-cat').value, date: document.getElementById('g-date').value, note: document.getElementById('g-note').value, done: false, ts: Date.now()});
+  save(d);
+  document.getElementById('g-title').value = ''; document.getElementById('g-note').value = ''; document.getElementById('g-date').value = '';
+  toast('Goal added'); renderGoals(); renderHome();
+}
+function toggleGoal(i) { const d = getData(); d.goals[i].done = !d.goals[i].done; save(d); renderGoals(); renderHome(); }
+function deleteGoal(i) { const d = getData(); d.goals.splice(i, 1); save(d); renderGoals(); renderHome(); }
+
+function reflectTab(tab) {
+  ['journal','goals','mood'].forEach(t => document.getElementById('r-'+t).style.display = t === tab ? 'block' : 'none');
+  const tabs = ['journal','goals','mood'];
+  document.querySelectorAll('#reflect-tabs .rtab').forEach((b,i) => {
+    const on = tabs[i] === tab;
+    b.classList.toggle('on', on);
+    b.style.cssText = on ? 'background:var(--accent);color:#1a1510;border-color:transparent' : 'background:transparent;color:var(--text2);border:.5px solid var(--border2)';
+  });
+  if (tab === 'mood') renderMoodHistory();
+}
+function renderMoodHistory() {
+  const d = getData();
+  const mE = ['','😴','😐','🙂','😄','🔥'], mL = ['','Low','Okay','Good','Great','Fired up'];
+  const list = document.getElementById('mood-list');
+  if (!d.moods.length) { list.innerHTML = '<div class="empty">No check-ins yet</div>'; return; }
+  list.innerHTML = d.moods.slice().sort((a,b) => b.ts-a.ts).slice(0,14).map(m => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border)">
+      <span style="font-size:22px">${mE[m.val]}</span>
+      <div><div style="font-size:13px">${mL[m.val]}</div><div style="font-size:11px;color:var(--text3)">${new Date(m.ts).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}</div></div>
+    </div>`).join('');
+  const canvas = document.getElementById('mood-chart'), ctx = canvas.getContext('2d');
+  const recent = d.moods.slice().sort((a,b) => a.ts-b.ts).slice(-14);
+  canvas.width = canvas.offsetWidth || 300; canvas.height = 110;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (recent.length < 2) { ctx.fillStyle='#5a5550'; ctx.font='12px sans-serif'; ctx.fillText('Log more check-ins to see trend',10,55); return; }
+  const w = canvas.width, h = canvas.height, pad = 16;
+  const xs = recent.map((_,i) => pad + i*(w-pad*2)/(recent.length-1));
+  const ys = recent.map(m => h - pad - (m.val-1)*(h-pad*2)/4);
+  ctx.strokeStyle='#c8b89a'; ctx.lineWidth=2; ctx.beginPath();
+  xs.forEach((x,i) => i===0 ? ctx.moveTo(x,ys[i]) : ctx.lineTo(x,ys[i])); ctx.stroke();
+  ctx.fillStyle='#c8b89a';
+  xs.forEach((x,i) => { ctx.beginPath(); ctx.arc(x,ys[i],4,0,Math.PI*2); ctx.fill(); });
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+function saveName() {
+  const d = getData(); d.name = document.getElementById('s-name').value.trim();
+  save(d); toast('Name saved'); renderHome();
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(getData(), null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'dashboard-backup.json'; a.click();
+}
+function clearData() {
+  if (!confirm('Clear all local data? This cannot be undone.')) return;
+  localStorage.removeItem(SK); toast('Local data cleared'); renderHome();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+syncCfg = loadSyncCfg();
+if (syncCfg) {
+  setSyncStatus('spin', 'Syncing…');
+  syncPull().then(() => { renderHome(); });
+} else {
+  setSyncStatus('', 'Not connected');
+}
+initWX(); renderHome(); renderDiet('run');
+</script>
+</body>
+</html>
