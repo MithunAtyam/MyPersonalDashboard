@@ -1388,7 +1388,7 @@ async function runAutoMode() {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${encodeURIComponent(d.apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(d.apiKey)}`,
       {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
