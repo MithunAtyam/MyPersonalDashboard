@@ -147,6 +147,49 @@ select option{background:var(--bg3)}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#1a1510;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;z-index:200;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:13px}
+
+/* INVEST */
+.invest-form{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+.horizon-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}
+.horizon-btn{padding:10px 6px;border-radius:var(--r-sm);border:.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.horizon-btn .h-sub{font-size:9px;color:var(--text3);display:block;margin-top:2px;font-weight:400}
+.horizon-btn.sel{background:rgba(200,184,154,.12);border-color:var(--accent);color:var(--accent)}
+.horizon-btn.sel .h-sub{color:rgba(200,184,154,.7)}
+.score-circle{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;color:var(--text);flex-shrink:0}
+.score-buy{background:rgba(143,188,143,.15);border:2px solid var(--accent2);color:var(--accent2)}
+.score-hold{background:rgba(200,164,90,.15);border:2px solid #d4b06a;color:#d4b06a}
+.score-avoid{background:rgba(212,112,106,.15);border:2px solid var(--race);color:var(--race)}
+.verdict-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);margin-bottom:10px}
+.verdict-info{flex:1;min-width:0}
+.verdict-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.verdict-action{font-size:18px;font-weight:500;font-family:var(--serif);margin-top:2px}
+.verdict-action.buy{color:var(--accent2)}
+.verdict-action.hold{color:#d4b06a}
+.verdict-action.avoid{color:var(--race)}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.metric-card{background:var(--bg3);border-radius:var(--r-sm);padding:10px;text-align:center}
+.metric-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.metric-val{font-size:14px;font-weight:500;color:var(--text)}
+.metric-val.up{color:var(--accent2)}
+.metric-val.down{color:var(--race)}
+.section-block{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
+.section-block-hdr{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.section-block-body{font-size:13px;color:var(--text2);line-height:1.6}
+.loading-spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(200,184,154,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.warn-banner{background:rgba(212,112,106,.08);border:.5px solid rgba(212,112,106,.25);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.warn-banner strong{color:var(--race)}
+.history-item{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.history-item:active{background:var(--bg3)}
+.history-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.history-ticker{font-size:14px;font-weight:500;font-family:var(--serif)}
+.history-date{font-size:10px;color:var(--text3)}
+.history-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.dca-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.dca-item{background:var(--bg3);border-radius:var(--r-sm);padding:10px 12px}
+.dca-name{font-size:12px;font-weight:500;color:var(--text)}
+.dca-amount{font-size:11px;color:var(--text3);margin-top:2px}
+.dca-pct{font-size:10px;color:var(--accent);margin-top:2px}
 </style>
 </head>
 <body>
@@ -231,6 +274,88 @@ select option{background:var(--bg3)}
     <button class="rtab" onclick="dietTab('race')">Race week</button>
   </div>
   <div id="diet-content"></div>
+</div>
+
+<!-- INVEST -->
+<div class="page" id="p-invest">
+  <div class="ph"><h1>Invest</h1><p>Personalised stock analysis for your situation</p></div>
+
+  <div id="invest-sync-note" style="display:none">
+    <div style="background:rgba(212,112,106,.08);border:.5px solid rgba(212,112,106,.25);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <span id="invest-sync-msg">Sync not connected — data stays on this device only</span>
+      <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="goPage('settings')">Fix</button>
+    </div>
+  </div>
+
+  <div class="rtabs" id="invest-tabs">
+    <button class="rtab on" onclick="investTab('analyse')">Analyse</button>
+    <button class="rtab" onclick="investTab('dca')">My DCA</button>
+    <button class="rtab" onclick="investTab('history')">History</button>
+  </div>
+
+  <!-- ANALYSE -->
+  <div id="i-analyse">
+    <div class="warn-banner">
+      <strong>Not financial advice.</strong> This is one informed opinion to consider alongside your own research. Past performance does not predict future results.
+    </div>
+
+    <div class="invest-form">
+      <label>Stock ticker or name</label>
+      <input type="text" id="inv-ticker" placeholder="e.g. NVDA, AAPL, CBA.AX, BHP.AX" style="text-transform:uppercase">
+      <label>Investment horizon</label>
+      <div class="horizon-row">
+        <button class="horizon-btn sel" data-h="short" onclick="selHorizon('short')">Short<span class="h-sub">Few months</span></button>
+        <button class="horizon-btn" data-h="medium" onclick="selHorizon('medium')">Medium<span class="h-sub">1–5 years</span></button>
+        <button class="horizon-btn" data-h="long" onclick="selHorizon('long')">Long<span class="h-sub">10+ years</span></button>
+      </div>
+      <label>Notes (optional)</label>
+      <input type="text" id="inv-notes" placeholder="e.g. earnings next week, considering 20% position">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+        <button class="btn" style="margin-top:0;background:var(--bg3);color:var(--text);border:.5px solid var(--border2)" onclick="runPasteMode()">📋 Paste mode</button>
+        <button class="btn" style="margin-top:0" onclick="runAutoMode()">⚡ Auto mode</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.5">
+        Paste mode: copy → paste into Claude.ai → paste response back · best quality, free<br>
+        Auto mode: Gemini API runs it automatically · needs free Gemini key in Settings
+      </div>
+      <div id="inv-status" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
+    </div>
+
+    <!-- Paste mode response area (hidden by default) -->
+    <div id="paste-response-area" style="display:none">
+      <div class="card" style="border-color:var(--accent)">
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Paste Claude's JSON response below:</strong></div>
+        <textarea id="paste-response" placeholder='{"verdict": "BUY", "risk_score": 6, ...}' style="height:120px;font-family:monospace;font-size:11px"></textarea>
+        <button class="btn" onclick="parsePasteResponse()">Save analysis</button>
+        <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
+      </div>
+    </div>
+
+    <div id="inv-result"></div>
+  </div>
+
+  <!-- DCA -->
+  <div id="i-dca" style="display:none">
+    <div class="card">
+      <div style="font-size:16px;font-weight:500;margin-bottom:2px">Monthly DCA</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">$1,500 across 5 ETFs · weighted</div>
+      <div class="dca-grid">
+        <div class="dca-item"><div class="dca-name">NDQ</div><div class="dca-amount">$450/mo</div><div class="dca-pct">30%</div></div>
+        <div class="dca-item"><div class="dca-name">QSML</div><div class="dca-amount">$262.50/mo</div><div class="dca-pct">17.5%</div></div>
+        <div class="dca-item"><div class="dca-name">EMKT</div><div class="dca-amount">$262.50/mo</div><div class="dca-pct">17.5%</div></div>
+        <div class="dca-item"><div class="dca-name">PGA1</div><div class="dca-amount">$262.50/mo</div><div class="dca-pct">17.5%</div></div>
+        <div class="dca-item"><div class="dca-name">LSF</div><div class="dca-amount">$262.50/mo</div><div class="dca-pct">17.5%</div></div>
+      </div>
+      <div class="diet-tip" style="margin-top:14px">
+        <strong style="color:var(--accent)">Your investor profile:</strong> 23 years old · medium-high risk tolerance · large cash position · living at home · no major loan pressure · maximising wealth · open to property in future. Claude uses this context for every analysis.
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="i-history" style="display:none">
+    <div id="invest-history-list"></div>
+  </div>
 </div>
 
 <!-- REFLECT -->
@@ -346,6 +471,20 @@ select option{background:var(--bg3)}
     <button class="btn" onclick="saveName()">Save name</button>
   </div>
 
+  <div class="sec">Investment analysis (free)</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">
+      You can choose per analysis: <strong style="color:var(--text)">Paste mode</strong> (copy prompt → paste into Claude.ai → paste back) or <strong style="color:var(--text)">Auto mode</strong> (Gemini free API runs it automatically).
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">
+      For Auto mode, get a free Gemini key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a> → Create API key. No credit card required.
+    </div>
+    <label>Gemini API key (optional — only for Auto mode)</label>
+    <input type="password" id="s-api-key" placeholder="AIzaSy...">
+    <button class="btn" onclick="saveApiKey()">Save Gemini key</button>
+    <div id="api-key-status" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
+  </div>
+
   <div class="sec">Data</div>
   <div class="card">
     <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Export a backup of all your data at any time.</div>
@@ -363,6 +502,9 @@ select option{background:var(--bg3)}
   </button>
   <button class="nav-item" id="nav-diet" onclick="goPage('diet')">
     <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M8 12h8M12 8v8"/></svg>Diet
+  </button>
+  <button class="nav-item" id="nav-invest" onclick="goPage('invest')">
+    <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Invest
   </button>
   <button class="nav-item" id="nav-reflect" onclick="goPage('reflect')">
     <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Reflect
@@ -480,11 +622,18 @@ function mergeData(local, remote) {
   allM.forEach(m => { mMap[m.date] = m; });
   const moods = Object.values(mMap).sort((a,b) => a.ts - b.ts);
 
+  // Analyses: merge by timestamp
+  const allA = [...(local.analyses || []), ...(remote.analyses || [])];
+  const aMap = {};
+  allA.forEach(a => { aMap[a.ts] = a; });
+  const analyses = Object.values(aMap).sort((a,b) => a.ts - b.ts);
+
   // Office: remote wins (most recently set)
   const office = remote.office && remote.office.length ? remote.office : (local.office || []);
   const name = remote.name || local.name || '';
+  const apiKey = remote.apiKey || local.apiKey || '';
 
-  return { journal, goals, moods, office, name };
+  return { journal, goals, moods, office, name, analyses, apiKey };
 }
 
 function setSyncStatus(state, label) {
@@ -555,6 +704,8 @@ function getData() {
   d.goals = d.goals || [];
   d.moods = d.moods || [];
   d.name = d.name || '';
+  d.apiKey = d.apiKey || '';
+  d.analyses = d.analyses || [];
   return d;
 }
 async function save(d) {
@@ -692,11 +843,20 @@ function goPage(name) {
   if (name === 'home') renderHome();
   if (name === 'schedule') renderSchedule();
   if (name === 'diet') renderDiet('run');
+  if (name === 'invest') { 
+    const syncNote = document.getElementById('invest-sync-note');
+    if (!syncCfg) { syncNote.style.display = 'block'; }
+    else { syncNote.style.display = 'none'; }
+    if (syncCfg) syncPull().then(() => { investTab('analyse'); renderInvestHistory(); });
+    else { investTab('analyse'); renderInvestHistory(); }
+  }
   if (name === 'reflect') { renderJournal(); renderGoals(); renderMoodHistory(); }
   if (name === 'settings') {
     renderSyncUI();
     const d = getData();
     document.getElementById('s-name').value = d.name || '';
+    document.getElementById('s-api-key').value = d.apiKey ? '••••••••••••••••' : '';
+    if (d.apiKey) document.getElementById('api-key-status').textContent = 'Gemini key saved · Auto mode ready';
   }
 }
 
@@ -971,6 +1131,439 @@ function saveName() {
   const d = getData(); d.name = document.getElementById('s-name').value.trim();
   save(d); toast('Name saved'); renderHome();
 }
+function saveApiKey() {
+  const key = document.getElementById('s-api-key').value.trim();
+  if (!key || key.includes('•')) { toast('Enter your API key'); return; }
+  if (!key.startsWith('AIza')) { toast('Gemini key should start with AIza'); return; }
+  const d = getData(); d.apiKey = key;
+  save(d);
+  document.getElementById('s-api-key').value = '••••••••••••••••';
+  document.getElementById('api-key-status').textContent = 'Gemini key saved · Auto mode ready';
+  toast('API key saved');
+}
+
+// ─── INVEST ──────────────────────────────────────────────────────────────────
+let selectedHorizon = 'short';
+function selHorizon(h) {
+  selectedHorizon = h;
+  document.querySelectorAll('.horizon-btn').forEach(b => b.classList.toggle('sel', b.dataset.h === h));
+}
+
+function investTab(tab) {
+  ['analyse','dca','history'].forEach(t => {
+    const el = document.getElementById('i-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  const tabs = ['analyse','dca','history'];
+  document.querySelectorAll('#invest-tabs .rtab').forEach((b,i) => {
+    const on = tabs[i] === tab;
+    b.classList.toggle('on', on);
+    b.style.cssText = on ? 'background:var(--accent);color:#1a1510;border-color:transparent' : 'background:transparent;color:var(--text2);border:.5px solid var(--border2)';
+  });
+  if (tab === 'history') renderInvestHistory();
+}
+
+async function fetchStockData(ticker) {
+  // Yahoo Finance via a CORS-friendly proxy
+  // Yahoo doesn't allow CORS directly, so we use their query2 endpoint which sometimes works
+  // Fallback: just return ticker for Claude to work with
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=3mo`;
+    const proxy = `https://corsproxy.io/?` + encodeURIComponent(url);
+    const res = await fetch(proxy);
+    if (!res.ok) throw new Error('fetch failed');
+    const j = await res.json();
+    const result = j.chart?.result?.[0];
+    if (!result) throw new Error('no data');
+    const meta = result.meta;
+    const closes = result.indicators.quote[0].close.filter(x => x != null);
+    const price = meta.regularMarketPrice || closes[closes.length-1];
+    const prev = meta.previousClose || meta.chartPreviousClose;
+    const change = price - prev;
+    const pct = (change / prev) * 100;
+    const high52 = meta.fiftyTwoWeekHigh;
+    const low52 = meta.fiftyTwoWeekLow;
+    const currency = meta.currency || 'USD';
+    return {
+      ticker: meta.symbol,
+      price, prev, change, pct,
+      high52, low52, currency,
+      closes: closes.slice(-60), // last 60 days
+    };
+  } catch(e) {
+    return null;
+  }
+}
+
+const USER_PROFILE = `
+INVESTOR PROFILE:
+- Age 23, working full time, living at home with parents
+- Large cash capital available, no major loan pressure
+- May purchase property in future but not concerned about it now
+- Medium-to-high risk tolerance, comfortable with individual stocks
+- Goal: maximise wealth
+- Currently DCA $1,500/month into ASX ETFs: NDQ 30%, plus QSML, EMKT, PGA1, LSF (each ~17.5%)
+- Time horizons defined as: SHORT = few months (momentum/flip), MEDIUM = 1-5 years, LONG = 10+ years
+`;
+
+function buildPrompt(ticker, horizon, notes, stockData) {
+  const horizonDef = {
+    short: 'SHORT TERM (few months) — momentum play / flip / day trading vibes',
+    medium: 'MEDIUM TERM (1–5 years)',
+    long: 'LONG TERM (10+ years) — buy and hold',
+  }[horizon];
+
+  let priceContext = '';
+  if (stockData) {
+    priceContext = `
+LIVE MARKET DATA (just fetched):
+- Current price: ${stockData.currency} ${stockData.price.toFixed(2)}
+- Day change: ${stockData.change >= 0 ? '+' : ''}${stockData.change.toFixed(2)} (${stockData.pct.toFixed(2)}%)
+- 52-week range: ${stockData.low52.toFixed(2)} – ${stockData.high52.toFixed(2)}
+- Recent closes (last 60 trading days): ${stockData.closes.map(c => c.toFixed(2)).join(', ')}
+`;
+  } else {
+    priceContext = `\nNote: Could not fetch live price for ${ticker}. Use your most recent knowledge.\n`;
+  }
+
+  return `You are analysing a stock for a personal investor with this profile:
+${USER_PROFILE}
+
+THEY ARE CONSIDERING: ${ticker}
+TIME HORIZON: ${horizonDef}
+${notes ? 'THEIR NOTES: ' + notes : ''}
+${priceContext}
+
+Provide a structured analysis tailored to THIS investor's profile and chosen time horizon. The analysis should be DIFFERENT for short vs medium vs long term — momentum/technicals matter more for short, fundamentals matter more for long.
+
+Respond with ONLY a JSON object (no markdown, no preamble) in this exact structure:
+{
+  "verdict": "BUY" | "HOLD" | "AVOID",
+  "risk_score": <1-10, where 1=low risk, 10=very high risk>,
+  "conviction": <1-10, your confidence in this call>,
+  "entry_price": "<specific price or range, e.g. $145-150 or 'at market'>",
+  "target_price": "<specific price target for this horizon>",
+  "stop_loss": "<specific stop loss level>",
+  "position_size": "<suggested % of portfolio given their risk profile, e.g. '3-5% speculative position'>",
+  "thesis": "<2-3 sentences on the core thesis for this horizon>",
+  "risks": "<2-3 specific risks for THIS investor and horizon>",
+  "personalised_note": "<one sentence specific to their situation - age, risk profile, current DCA mix, large cash position etc>"
+}
+
+Be specific with prices and percentages. Tailor the analysis genuinely to their horizon — a momentum play has different logic than a 10-year hold.`;
+}
+
+let pendingPaste = null; // holds {ticker, horizon, notes, stockData} while user pastes
+
+async function runPasteMode() {
+  const ticker = document.getElementById('inv-ticker').value.trim().toUpperCase();
+  const notes = document.getElementById('inv-notes').value.trim();
+  const horizon = selectedHorizon;
+  if (!ticker) { toast('Enter a ticker first'); return; }
+
+  const status = document.getElementById('inv-status');
+  status.innerHTML = '<span class="loading-spin"></span> Fetching live price data...';
+
+  const stockData = await fetchStockData(ticker);
+
+  const prompt = buildPrompt(ticker, horizon, notes, stockData);
+  pendingPaste = { ticker, horizon, notes, stockData };
+
+  // Copy to clipboard
+  try {
+    await navigator.clipboard.writeText(prompt);
+    status.innerHTML = '✓ Prompt copied · opening Claude.ai...';
+  } catch(e) {
+    status.innerHTML = '<span style="color:var(--race)">Could not auto-copy. Tap field below to copy manually.</span>';
+    // Show prompt textarea for manual copy
+    const area = document.getElementById('paste-response-area');
+    area.style.display = 'block';
+    area.innerHTML = `
+      <div class="card" style="border-color:var(--accent)">
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Copy this prompt, then paste into Claude.ai:</strong></div>
+        <textarea readonly onclick="this.select()" style="height:120px;font-family:monospace;font-size:11px">${prompt.replace(/</g,'&lt;')}</textarea>
+        <button class="btn" onclick="copyPromptManual()">Copy prompt</button>
+        <button class="btn btn-ghost" onclick="showPasteResponseArea()" style="margin-top:8px">I've got Claude's response — paste it</button>
+        <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
+      </div>`;
+    return;
+  }
+
+  setTimeout(() => {
+    window.open('https://claude.ai/new', '_blank');
+    showPasteResponseArea();
+  }, 700);
+}
+
+function showPasteResponseArea() {
+  const area = document.getElementById('paste-response-area');
+  area.style.display = 'block';
+  area.innerHTML = `
+    <div class="card" style="border-color:var(--accent)">
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Paste Claude's JSON response below:</strong></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5">Copy the entire JSON block from Claude's response (including the curly braces) and paste it here.</div>
+      <textarea id="paste-response" placeholder='{"verdict": "BUY", "risk_score": 6, ...}' style="height:120px;font-family:monospace;font-size:11px"></textarea>
+      <button class="btn" onclick="parsePasteResponse()">Save analysis</button>
+      <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
+    </div>`;
+  document.getElementById('inv-status').textContent = '';
+  setTimeout(() => document.getElementById('paste-response')?.focus(), 100);
+}
+
+function copyPromptManual() {
+  const ta = document.querySelector('#paste-response-area textarea');
+  ta.select();
+  document.execCommand('copy');
+  toast('Prompt copied');
+}
+
+function cancelPasteMode() {
+  pendingPaste = null;
+  document.getElementById('paste-response-area').style.display = 'none';
+  document.getElementById('paste-response-area').innerHTML = '';
+  document.getElementById('inv-status').textContent = '';
+}
+
+function parsePasteResponse() {
+  const text = document.getElementById('paste-response').value.trim();
+  if (!text) { toast('Paste the response first'); return; }
+  if (!pendingPaste) { toast('No pending analysis'); return; }
+
+  let analysis;
+  try {
+    // Try direct parse first
+    analysis = JSON.parse(text);
+  } catch(e) {
+    // Try to extract JSON block
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) { toast('Could not find JSON in response'); return; }
+    try {
+      analysis = JSON.parse(match[0]);
+    } catch(e2) {
+      toast('Invalid JSON — try copying again');
+      return;
+    }
+  }
+
+  const { ticker, horizon, notes, stockData } = pendingPaste;
+  const d = getData();
+  d.analyses.push({
+    ts: Date.now(),
+    ticker, horizon, notes,
+    analysis,
+    stockData: stockData ? {price: stockData.price, currency: stockData.currency, pct: stockData.pct} : null,
+    source: 'paste',
+  });
+  save(d);
+  pendingPaste = null;
+  document.getElementById('paste-response-area').style.display = 'none';
+  document.getElementById('paste-response-area').innerHTML = '';
+  renderAnalysis(analysis, ticker, horizon, stockData);
+  toast('Analysis saved');
+}
+
+async function runAutoMode() {
+  const d = getData();
+  const ticker = document.getElementById('inv-ticker').value.trim().toUpperCase();
+  const notes = document.getElementById('inv-notes').value.trim();
+  const horizon = selectedHorizon;
+
+  if (!ticker) { toast('Enter a ticker first'); return; }
+  if (!d.apiKey) {
+    toast('Add free Gemini key in Settings for Auto mode');
+    goPage('settings');
+    return;
+  }
+
+  const status = document.getElementById('inv-status');
+  const result = document.getElementById('inv-result');
+  status.innerHTML = '<span class="loading-spin"></span> Fetching live price data...';
+  result.innerHTML = '';
+
+  const stockData = await fetchStockData(ticker);
+
+  status.innerHTML = '<span class="loading-spin"></span> Analysing with Gemini...';
+
+  const prompt = buildPrompt(ticker, horizon, notes, stockData);
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${encodeURIComponent(d.apiKey)}`,
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          contents: [{parts: [{text: prompt}]}],
+          generationConfig: {temperature: 0.4, maxOutputTokens: 2000},
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.text();
+      let errMsg = 'API error';
+      try { const ej = JSON.parse(err); errMsg = ej.error?.message || errMsg; } catch(e) {}
+      throw new Error(errMsg);
+    }
+
+    const j = await res.json();
+    const text = j.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) throw new Error('Empty response');
+
+    const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response');
+    const analysis = JSON.parse(match[0]);
+
+    const dd = getData();
+    dd.analyses.push({
+      ts: Date.now(),
+      ticker, horizon, notes,
+      analysis,
+      stockData: stockData ? {price: stockData.price, currency: stockData.currency, pct: stockData.pct} : null,
+      source: 'gemini',
+    });
+    save(dd);
+
+    status.textContent = '';
+    renderAnalysis(analysis, ticker, horizon, stockData);
+  } catch(e) {
+    status.innerHTML = '<span style="color:var(--race)">Error: ' + e.message + '</span>';
+  }
+}
+
+function renderAnalysis(a, ticker, horizon, stockData) {
+  const verdict = a.verdict || 'HOLD';
+  const verdictCls = verdict === 'BUY' ? 'buy' : verdict === 'AVOID' ? 'avoid' : 'hold';
+  const scoreCls = verdict === 'BUY' ? 'score-buy' : verdict === 'AVOID' ? 'score-avoid' : 'score-hold';
+  const horizonLabel = {short:'Short term · few months', medium:'Medium · 1–5 yrs', long:'Long · 10+ yrs'}[horizon];
+
+  let priceHtml = '';
+  if (stockData) {
+    const cls = stockData.pct >= 0 ? 'up' : 'down';
+    priceHtml = `
+      <div class="metrics-grid" style="margin-bottom:10px">
+        <div class="metric-card">
+          <div class="metric-lbl">Price</div>
+          <div class="metric-val">${stockData.currency} ${stockData.price.toFixed(2)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">Today</div>
+          <div class="metric-val ${cls}">${stockData.pct >= 0 ? '+' : ''}${stockData.pct.toFixed(2)}%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">Horizon</div>
+          <div class="metric-val" style="font-size:11px">${horizonLabel}</div>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('inv-result').innerHTML = `
+    <div class="verdict-row">
+      <div class="score-circle ${scoreCls}">${verdict[0]}</div>
+      <div class="verdict-info">
+        <div class="verdict-title">${ticker} · ${horizonLabel}</div>
+        <div class="verdict-action ${verdictCls}">${verdict}</div>
+      </div>
+    </div>
+
+    ${priceHtml}
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-lbl">Risk</div>
+        <div class="metric-val">${a.risk_score || '—'}/10</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Conviction</div>
+        <div class="metric-val">${a.conviction || '—'}/10</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Size</div>
+        <div class="metric-val" style="font-size:11px">${a.position_size || '—'}</div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-lbl">Entry</div>
+        <div class="metric-val" style="font-size:12px">${a.entry_price || '—'}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Target</div>
+        <div class="metric-val up" style="font-size:12px">${a.target_price || '—'}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Stop loss</div>
+        <div class="metric-val down" style="font-size:12px">${a.stop_loss || '—'}</div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-block-hdr">Thesis</div>
+      <div class="section-block-body">${a.thesis || '—'}</div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-block-hdr">Risks</div>
+      <div class="section-block-body">${a.risks || '—'}</div>
+    </div>
+
+    <div class="section-block" style="border-color:rgba(200,184,154,.3);background:rgba(200,184,154,.05)">
+      <div class="section-block-hdr" style="color:var(--accent)">For your situation</div>
+      <div class="section-block-body" style="color:var(--text)">${a.personalised_note || '—'}</div>
+    </div>
+
+    <div class="warn-banner" style="margin-top:14px;margin-bottom:0">
+      <strong>Reminder:</strong> This is one informed view. Verify the prices and reasoning yourself before acting. Saved to History.
+    </div>`;
+}
+
+function renderInvestHistory() {
+  const d = getData();
+  const list = document.getElementById('invest-history-list');
+  if (!d.analyses || !d.analyses.length) {
+    list.innerHTML = '<div class="empty">No analyses yet — run your first one</div>';
+    return;
+  }
+  const verdictCls = v => v === 'BUY' ? 'buy' : v === 'AVOID' ? 'avoid' : 'hold';
+  const horizonLbl = {short:'Short', medium:'Medium', long:'Long'};
+  list.innerHTML = d.analyses.slice().reverse().map((entry,i) => {
+    const idx = d.analyses.length - 1 - i;
+    const a = entry.analysis;
+    return `
+      <div class="history-item" onclick="openHistoryItem(${idx})">
+        <div class="history-head">
+          <span class="history-ticker">${entry.ticker}</span>
+          <span class="history-date">${new Date(entry.ts).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'2-digit'})}</span>
+        </div>
+        <div class="history-meta">
+          <span class="pill" style="background:rgba(155,125,212,.12);color:#b89ee0">${horizonLbl[entry.horizon]}</span>
+          <span class="pill" style="background:${a.verdict==='BUY'?'rgba(143,188,143,.15)':a.verdict==='AVOID'?'rgba(212,112,106,.15)':'rgba(200,164,90,.15)'};color:${a.verdict==='BUY'?'var(--accent2)':a.verdict==='AVOID'?'var(--race)':'#d4b06a'};font-weight:500">${a.verdict}</span>
+          <span class="pill" style="background:var(--bg3);color:var(--text2)">Risk ${a.risk_score}/10</span>
+          ${entry.stockData ? `<span class="pill" style="background:var(--bg3);color:var(--text2)">${entry.stockData.currency} ${entry.stockData.price.toFixed(2)}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openHistoryItem(idx) {
+  const d = getData();
+  const entry = d.analyses[idx];
+  if (!entry) return;
+  investTab('analyse');
+  document.getElementById('inv-ticker').value = entry.ticker;
+  selHorizon(entry.horizon);
+  document.getElementById('inv-notes').value = entry.notes || '';
+  renderAnalysis(entry.analysis, entry.ticker, entry.horizon, entry.stockData ? {
+    price: entry.stockData.price,
+    currency: entry.stockData.currency,
+    pct: entry.stockData.pct,
+  } : null);
+  // scroll to top
+  window.scrollTo(0, 0);
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(getData(), null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
