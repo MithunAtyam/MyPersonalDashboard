@@ -190,6 +190,25 @@ select option{background:var(--bg3)}
 .dca-name{font-size:12px;font-weight:500;color:var(--text)}
 .dca-amount{font-size:11px;color:var(--text3);margin-top:2px}
 .dca-pct{font-size:10px;color:var(--accent);margin-top:2px}
+
+/* TOP PICKS */
+.pick-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.pick-card:active{background:var(--bg3)}
+.pick-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.pick-ticker{font-size:15px;font-weight:500;font-family:var(--serif);color:var(--text)}
+.pick-name{font-size:11px;color:var(--text3);margin-top:1px}
+.pick-tag{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:500;flex-shrink:0;white-space:nowrap}
+.pick-tag.s{background:rgba(212,112,106,.15);color:var(--race)}
+.pick-tag.m{background:rgba(200,164,90,.15);color:#d4b06a}
+.pick-tag.l{background:rgba(143,188,143,.15);color:var(--accent2)}
+.pick-blurb{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.pick-why{font-size:11px;color:var(--accent);font-style:italic;line-height:1.5}
+.pick-action{font-size:11px;color:var(--text3);margin-top:6px;text-align:right}
+.pick-action:after{content:' →'}
+.picks-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.picks-stale{font-size:10px;color:var(--text3)}
+.refresh-btn{background:transparent;border:.5px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;cursor:pointer;font-family:var(--sans)}
+.refresh-btn:active{background:var(--bg3)}
 </style>
 </head>
 <body>
@@ -295,6 +314,17 @@ select option{background:var(--bg3)}
 
   <!-- ANALYSE -->
   <div id="i-analyse">
+    <div class="sec" style="margin-top:0">Top picks for you</div>
+    <div class="picks-meta">
+      <span class="picks-stale" id="picks-stale">Tap refresh to get fresh picks</span>
+      <button class="refresh-btn" onclick="refreshPicks()">↻ Refresh picks</button>
+    </div>
+    <div id="picks-list">
+      <div class="empty" style="padding:18px;font-size:12px">No picks yet — tap refresh to generate 5 personalised stock ideas</div>
+    </div>
+    <div id="picks-status" style="font-size:12px;color:var(--text2);margin:6px 0;text-align:center"></div>
+
+    <div class="sec">Analyse a specific stock</div>
     <div class="warn-banner">
       <strong>Not financial advice.</strong> This is one informed opinion to consider alongside your own research. Past performance does not predict future results.
     </div>
@@ -632,8 +662,11 @@ function mergeData(local, remote) {
   const office = remote.office && remote.office.length ? remote.office : (local.office || []);
   const name = remote.name || local.name || '';
   const apiKey = remote.apiKey || local.apiKey || '';
+  // Picks: take the newer one
+  let picks = local.picks || null;
+  if (remote.picks && (!picks || remote.picks.ts > picks.ts)) picks = remote.picks;
 
-  return { journal, goals, moods, office, name, analyses, apiKey };
+  return { journal, goals, moods, office, name, analyses, apiKey, picks };
 }
 
 function setSyncStatus(state, label) {
@@ -706,6 +739,7 @@ function getData() {
   d.name = d.name || '';
   d.apiKey = d.apiKey || '';
   d.analyses = d.analyses || [];
+  d.picks = d.picks || null;
   return d;
 }
 async function save(d) {
@@ -1160,7 +1194,223 @@ function investTab(tab) {
     b.classList.toggle('on', on);
     b.style.cssText = on ? 'background:var(--accent);color:#1a1510;border-color:transparent' : 'background:transparent;color:var(--text2);border:.5px solid var(--border2)';
   });
+  if (tab === 'analyse') renderPicks();
   if (tab === 'history') renderInvestHistory();
+}
+
+function renderPicks() {
+  const d = getData();
+  const list = document.getElementById('picks-list');
+  const stale = document.getElementById('picks-stale');
+  if (!d.picks || !d.picks.items || !d.picks.items.length) {
+    list.innerHTML = '<div class="empty" style="padding:18px;font-size:12px">No picks yet — tap refresh to generate 5 personalised stock ideas</div>';
+    stale.textContent = 'Tap refresh to get fresh picks';
+    return;
+  }
+  const age = Date.now() - d.picks.ts;
+  const ageHrs = Math.floor(age / 3600000);
+  const ageDays = Math.floor(ageHrs / 24);
+  const ageLabel = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'just now';
+  stale.textContent = `Generated ${ageLabel}` + (d.picks.source ? ` · via ${d.picks.source}` : '');
+
+  list.innerHTML = d.picks.items.map(p => `
+    <div class="pick-card" onclick="usePickForAnalysis('${(p.ticker||'').replace(/'/g,"\\'")}', '${(p.horizon||'medium')}')">
+      <div class="pick-head">
+        <div>
+          <div class="pick-ticker">${p.ticker || '—'}</div>
+          <div class="pick-name">${p.name || ''}</div>
+        </div>
+        <span class="pick-tag ${(p.horizon||'m')[0]}">${(p.horizon || 'medium').toUpperCase()}</span>
+      </div>
+      <div class="pick-blurb">${p.blurb || ''}</div>
+      <div class="pick-why">Why for you: ${p.why || ''}</div>
+      <div class="pick-action">Tap to analyse</div>
+    </div>
+  `).join('');
+}
+
+function usePickForAnalysis(ticker, horizon) {
+  document.getElementById('inv-ticker').value = ticker;
+  selHorizon(horizon);
+  // Scroll to the analyse form
+  document.getElementById('inv-ticker').scrollIntoView({behavior:'smooth', block:'center'});
+  setTimeout(() => document.getElementById('inv-ticker').focus(), 400);
+}
+
+function buildPicksPrompt() {
+  return `You are recommending 5 stocks to research for a personal investor with this profile:
+${USER_PROFILE}
+
+Suggest 5 stocks that genuinely align with their objectives:
+- Medium-to-high risk tolerance, maximising wealth at 23 with large cash position
+- Mix of horizons — include some short-term momentum plays AND some long-term holds
+- Complementary to their existing ASX ETF DCA (NDQ, QSML, EMKT, PGA1, LSF) — don't repeat similar exposure
+- Focus on what's currently interesting in the market — emerging trends, undervalued opportunities, momentum stories
+- Mix of geographies and sectors — not all US tech
+
+Respond with ONLY a JSON object (no markdown, no preamble) in this exact structure:
+{
+  "items": [
+    {
+      "ticker": "<exchange ticker e.g. NVDA, AAPL, CBA.AX>",
+      "name": "<full company name>",
+      "horizon": "short" | "medium" | "long",
+      "blurb": "<2 sentences on what the company does and current state>",
+      "why": "<1 sentence on why this fits THIS investor's profile and gap in their portfolio>"
+    }
+  ]
+}
+
+Return exactly 5 items. Be specific with current relevance, not generic. Use real, currently traded tickers.`;
+}
+
+async function refreshPicks() {
+  const d = getData();
+  const status = document.getElementById('picks-status');
+
+  // Check sync first
+  if (syncCfg) await syncPull();
+
+  // If they have API key, use auto. Otherwise paste flow.
+  if (d.apiKey) {
+    await refreshPicksAuto();
+  } else {
+    refreshPicksPaste();
+  }
+}
+
+async function refreshPicksAuto() {
+  const d = getData();
+  const status = document.getElementById('picks-status');
+  status.innerHTML = '<span class="loading-spin"></span> Generating fresh picks with Gemini...';
+
+  const prompt = buildPicksPrompt();
+  const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-preview', 'gemini-3-flash-preview'];
+
+  let apiResponse = null;
+  let usedModel = '';
+  let lastError = '';
+
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) {
+          status.innerHTML = `<span class="loading-spin"></span> Retrying ${model} (${attempt + 1}/3)...`;
+          await new Promise(r => setTimeout(r, 3000 * attempt));
+        }
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(d.apiKey)}`,
+          {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              contents: [{parts: [{text: prompt}]}],
+              generationConfig: {temperature: 0.7, maxOutputTokens: 2000},
+            }),
+          }
+        );
+        if (res.ok) { apiResponse = await res.json(); usedModel = model; break; }
+        const errBody = await res.json().catch(() => ({}));
+        const errMsg = errBody.error?.message || `HTTP ${res.status}`;
+        if (res.status === 404) { lastError = errMsg; break; }
+        if (res.status === 429 || res.status === 503 || errMsg.includes('high demand')) {
+          lastError = errMsg;
+          continue;
+        }
+        throw new Error(errMsg);
+      } catch(e) {
+        if (e.message.includes('not found') || e.message.includes('not supported')) break;
+        if (e.message.includes('high demand') || e.message.includes('rate')) { lastError = e.message; continue; }
+        status.innerHTML = `<span style="color:var(--race)">Error: ${e.message}</span>`;
+        return;
+      }
+    }
+    if (apiResponse) break;
+  }
+
+  if (!apiResponse) {
+    status.innerHTML = `<span style="color:var(--race)">All models busy — try Paste mode below, or wait a few minutes</span>`;
+    return;
+  }
+
+  try {
+    const text = apiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response');
+    const parsed = JSON.parse(match[0]);
+    if (!parsed.items || !Array.isArray(parsed.items)) throw new Error('No items in response');
+
+    const dd = getData();
+    dd.picks = {
+      items: parsed.items,
+      ts: Date.now(),
+      source: 'Gemini · ' + usedModel,
+    };
+    save(dd);
+    status.textContent = '';
+    renderPicks();
+    toast('Fresh picks loaded');
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--race)">Could not parse response — try again</span>`;
+  }
+}
+
+let pendingPicksPaste = false;
+
+async function refreshPicksPaste() {
+  const prompt = buildPicksPrompt();
+  pendingPicksPaste = true;
+
+  // Try clipboard copy
+  try {
+    await navigator.clipboard.writeText(prompt);
+  } catch(e) {}
+
+  const status = document.getElementById('picks-status');
+  status.innerHTML = `
+    <div style="background:rgba(200,184,154,.07);border:.5px solid rgba(200,184,154,.25);border-radius:var(--r-sm);padding:12px;margin:8px 0;text-align:left">
+      <div style="font-size:12px;color:var(--text);margin-bottom:6px"><strong>Paste mode:</strong></div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
+        1. Prompt copied to clipboard<br>
+        2. Open Claude.ai → paste → get JSON response<br>
+        3. Copy the JSON back → paste below → Save
+      </div>
+      <textarea id="picks-paste-input" placeholder='{"items": [...]}' style="height:100px;font-family:monospace;font-size:11px;margin-bottom:6px"></textarea>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" style="margin-top:0;flex:1" onclick="window.open('https://claude.ai/new','_blank')">Open Claude.ai</button>
+        <button class="btn btn-sm" style="margin-top:0;flex:1;background:var(--accent);color:#1a1510" onclick="savePicksPaste()">Save</button>
+        <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="cancelPicksPaste()">×</button>
+      </div>
+    </div>`;
+}
+
+function savePicksPaste() {
+  const text = document.getElementById('picks-paste-input').value.trim();
+  if (!text) { toast('Paste the JSON first'); return; }
+  try {
+    let parsed;
+    try { parsed = JSON.parse(text); } catch(e) {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON found');
+      parsed = JSON.parse(match[0]);
+    }
+    if (!parsed.items || !Array.isArray(parsed.items)) throw new Error('No items array');
+    const d = getData();
+    d.picks = { items: parsed.items, ts: Date.now(), source: 'Claude.ai (paste)' };
+    save(d);
+    pendingPicksPaste = false;
+    document.getElementById('picks-status').innerHTML = '';
+    renderPicks();
+    toast('Picks saved');
+  } catch(e) {
+    toast('Invalid JSON — try again');
+  }
+}
+
+function cancelPicksPaste() {
+  pendingPicksPaste = false;
+  document.getElementById('picks-status').innerHTML = '';
 }
 
 async function fetchStockData(ticker) {
@@ -1387,28 +1637,72 @@ async function runAutoMode() {
   const prompt = buildPrompt(ticker, horizon, notes, stockData);
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(d.apiKey)}`,
-      {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          contents: [{parts: [{text: prompt}]}],
-          generationConfig: {temperature: 0.4, maxOutputTokens: 2000},
-        }),
-      }
-    );
+    // Try models in order — first available free-tier model wins
+    // With automatic retry on high-demand / rate-limit errors
+    const MODELS = [
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-flash-preview',
+      'gemini-3-flash-preview',
+    ];
 
-    if (!res.ok) {
-      const err = await res.text();
-      let errMsg = 'API error';
-      try { const ej = JSON.parse(err); errMsg = ej.error?.message || errMsg; } catch(e) {}
-      throw new Error(errMsg);
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 3000; // 3 seconds between retries
+
+    let apiResponse = null;
+    let usedModel = '';
+    let lastError = '';
+
+    for (const model of MODELS) {
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          if (attempt > 0) {
+            status.innerHTML = `<span class="loading-spin"></span> High demand — retrying ${model} (attempt ${attempt + 1}/${MAX_RETRIES})...`;
+            await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
+          }
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(d.apiKey)}`,
+            {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                contents: [{parts: [{text: prompt}]}],
+                generationConfig: {temperature: 0.4, maxOutputTokens: 2000},
+              }),
+            }
+          );
+          if (res.ok) {
+            apiResponse = await res.json();
+            usedModel = model;
+            break;
+          }
+          const errBody = await res.json().catch(() => ({}));
+          const errMsg = errBody.error?.message || `HTTP ${res.status}`;
+          // 404 = model not found — skip to next model immediately
+          if (res.status === 404) { lastError = errMsg; break; }
+          // 429 or 503 = overloaded / rate limited — retry same model
+          if (res.status === 429 || res.status === 503 || errMsg.includes('high demand')) {
+            lastError = errMsg;
+            continue;
+          }
+          // Other errors — throw
+          throw new Error(errMsg);
+        } catch(e) {
+          if (e.message.includes('not found') || e.message.includes('not supported')) break;
+          if (e.message.includes('high demand') || e.message.includes('rate')) { lastError = e.message; continue; }
+          throw e;
+        }
+      }
+      if (apiResponse) break;
     }
 
-    const j = await res.json();
-    const text = j.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    if (!text) throw new Error('Empty response');
+    if (!apiResponse) {
+      // All models failed — offer paste mode as fallback
+      throw new Error(lastError + ' — try Paste mode instead (uses your Claude.ai subscription)');
+    }
+
+    const text = apiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) throw new Error('Empty response from ' + usedModel);
 
     const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
     const match = clean.match(/\{[\s\S]*\}/);
