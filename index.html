@@ -205,6 +205,25 @@ select option{background:var(--bg3)}
 .pick-why{font-size:11px;color:var(--accent);font-style:italic;line-height:1.5}
 .pick-action{font-size:11px;color:var(--text3);margin-top:6px;text-align:right}
 .pick-action:after{content:' →'}
+
+/* WORD OF THE DAY */
+.wotd-card{background:linear-gradient(135deg,rgba(200,184,154,.06),rgba(155,125,212,.04));border:.5px solid rgba(200,184,154,.25);border-radius:var(--r);padding:16px;margin-bottom:10px}
+.wotd-word{font-family:var(--serif);font-size:26px;color:var(--text);line-height:1.2}
+.wotd-phonetic{font-size:12px;color:var(--text3);font-style:italic;margin-top:2px}
+.wotd-pos{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:6px;margin-bottom:4px}
+.wotd-def{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.wotd-example{font-size:13px;color:var(--text);font-style:italic;line-height:1.6;padding:10px 12px;background:rgba(200,184,154,.06);border-left:2px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:8px}
+.wotd-tip{font-size:11px;color:var(--text3);line-height:1.5}
+.wotd-actions{display:flex;gap:8px;margin-top:10px}
+.wotd-save{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);cursor:pointer;padding:5px 10px;border:.5px solid rgba(200,184,154,.3);border-radius:var(--r-sm);background:transparent;font-family:var(--sans)}
+.wotd-save.saved{background:rgba(200,184,154,.1);color:var(--accent)}
+.wotd-next{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;padding:5px 10px;border:.5px solid var(--border2);border-radius:var(--r-sm);background:transparent;font-family:var(--sans)}
+.saved-words-toggle{font-size:11px;color:var(--accent);cursor:pointer;background:transparent;border:none;font-family:var(--sans);padding:5px 0;text-decoration:underline}
+.saved-word-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:.5px solid var(--border);gap:8px}
+.saved-word-item:last-child{border-bottom:none}
+.sw-word{font-size:13px;font-weight:500;font-family:var(--serif);color:var(--text)}
+.sw-def{font-size:11px;color:var(--text3);margin-top:1px}
+.sw-remove{font-size:10px;color:var(--race);cursor:pointer;background:transparent;border:none;font-family:var(--sans);padding:4px 8px;flex-shrink:0}
 .picks-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .picks-stale{font-size:10px;color:var(--text3)}
 .refresh-btn{background:transparent;border:.5px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;cursor:pointer;font-family:var(--sans)}
@@ -242,6 +261,15 @@ select option{background:var(--bg3)}
   </div>
   <div class="sec">Today</div>
   <div id="today-card"></div>
+  <div class="sec">Word of the day</div>
+  <div id="wotd-card"></div>
+  <div id="saved-words-section" style="display:none">
+    <div class="sec" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Saved words</span>
+      <button class="saved-words-toggle" onclick="toggleSavedWords()">hide</button>
+    </div>
+    <div class="card" id="saved-words-list"></div>
+  </div>
   <div class="sec">How are you feeling?</div>
   <div class="card">
     <div class="mood-row" id="quick-mood">
@@ -340,26 +368,15 @@ select option{background:var(--bg3)}
       </div>
       <label>Notes (optional)</label>
       <input type="text" id="inv-notes" placeholder="e.g. earnings next week, considering 20% position">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
-        <button class="btn" style="margin-top:0;background:var(--bg3);color:var(--text);border:.5px solid var(--border2)" onclick="runPasteMode()">📋 Paste mode</button>
-        <button class="btn" style="margin-top:0" onclick="runAutoMode()">⚡ Auto mode</button>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.5">
-        Paste mode: copy → paste into Claude.ai → paste response back · best quality, free<br>
-        Auto mode: Gemini API runs it automatically · needs free Gemini key in Settings
+      <button class="btn" onclick="runAnalyse()">Analyse with Claude</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center">
+        Copies prompt → opens Claude.ai → paste response back
       </div>
       <div id="inv-status" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
     </div>
 
-    <!-- Paste mode response area (hidden by default) -->
-    <div id="paste-response-area" style="display:none">
-      <div class="card" style="border-color:var(--accent)">
-        <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Paste Claude's JSON response below:</strong></div>
-        <textarea id="paste-response" placeholder='{"verdict": "BUY", "risk_score": 6, ...}' style="height:120px;font-family:monospace;font-size:11px"></textarea>
-        <button class="btn" onclick="parsePasteResponse()">Save analysis</button>
-        <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
-      </div>
-    </div>
+    <!-- Paste response area -->
+    <div id="paste-response-area" style="display:none"></div>
 
     <div id="inv-result"></div>
   </div>
@@ -499,20 +516,6 @@ select option{background:var(--bg3)}
     <label>Your name</label>
     <input type="text" id="s-name" placeholder="e.g. James">
     <button class="btn" onclick="saveName()">Save name</button>
-  </div>
-
-  <div class="sec">Investment analysis (free)</div>
-  <div class="card">
-    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">
-      You can choose per analysis: <strong style="color:var(--text)">Paste mode</strong> (copy prompt → paste into Claude.ai → paste back) or <strong style="color:var(--text)">Auto mode</strong> (Gemini free API runs it automatically).
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">
-      For Auto mode, get a free Gemini key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a> → Create API key. No credit card required.
-    </div>
-    <label>Gemini API key (optional — only for Auto mode)</label>
-    <input type="password" id="s-api-key" placeholder="AIzaSy...">
-    <button class="btn" onclick="saveApiKey()">Save Gemini key</button>
-    <div id="api-key-status" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
   </div>
 
   <div class="sec">Data</div>
@@ -666,7 +669,13 @@ function mergeData(local, remote) {
   let picks = local.picks || null;
   if (remote.picks && (!picks || remote.picks.ts > picks.ts)) picks = remote.picks;
 
-  return { journal, goals, moods, office, name, analyses, apiKey, picks };
+  // Saved words: merge by word, deduplicate
+  const allSW = [...(local.savedWords || []), ...(remote.savedWords || [])];
+  const swMap = {};
+  allSW.forEach(w => { swMap[w.word] = w; });
+  const savedWords = Object.values(swMap).sort((a,b) => (b.ts||0) - (a.ts||0));
+
+  return { journal, goals, moods, office, name, analyses, apiKey, picks, savedWords };
 }
 
 function setSyncStatus(state, label) {
@@ -740,6 +749,7 @@ function getData() {
   d.apiKey = d.apiKey || '';
   d.analyses = d.analyses || [];
   d.picks = d.picks || null;
+  d.savedWords = d.savedWords || [];
   return d;
 }
 async function save(d) {
@@ -889,8 +899,6 @@ function goPage(name) {
     renderSyncUI();
     const d = getData();
     document.getElementById('s-name').value = d.name || '';
-    document.getElementById('s-api-key').value = d.apiKey ? '••••••••••••••••' : '';
-    if (d.apiKey) document.getElementById('api-key-status').textContent = 'Gemini key saved · Auto mode ready';
   }
 }
 
@@ -931,6 +939,8 @@ function renderHome() {
   }
   const todayMood = (d.moods || []).find(m => m.date === today().toISOString().split('T')[0]);
   if (todayMood) document.querySelectorAll('#quick-mood .mood-btn').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.v) === todayMood.val));
+
+  renderWOTD();
 }
 
 function quickMood(val) {
@@ -1165,15 +1175,161 @@ function saveName() {
   const d = getData(); d.name = document.getElementById('s-name').value.trim();
   save(d); toast('Name saved'); renderHome();
 }
-function saveApiKey() {
-  const key = document.getElementById('s-api-key').value.trim();
-  if (!key || key.includes('•')) { toast('Enter your API key'); return; }
-  if (!key.startsWith('AIza')) { toast('Gemini key should start with AIza'); return; }
-  const d = getData(); d.apiKey = key;
+// ─── WORD OF THE DAY ─────────────────────────────────────────────────────────
+// 120 curated words — cycles through based on day of year so you get a new one daily
+const WORDS = [
+  {word:'Perspicacious',phonetic:'/pɜːr.spɪˈkeɪ.ʃəs/',pos:'adjective',def:'Having a ready insight into and understanding of things; mentally sharp and perceptive.',example:'"The perspicacious investor noticed the shift in market sentiment weeks before anyone else reacted."',tip:'From Latin perspicax — "seeing through." Great alternative to "observant" or "sharp."'},
+  {word:'Sanguine',phonetic:'/ˈsæŋ.ɡwɪn/',pos:'adjective',def:'Optimistic or positive, especially in a difficult situation.',example:'"Despite the company missing its quarterly targets, the CEO remained sanguine about the long-term trajectory."',tip:'Originally meant "blood-red" — medieval doctors believed optimistic people had more blood. Use when "optimistic" feels too plain.'},
+  {word:'Nascent',phonetic:'/ˈneɪ.sənt/',pos:'adjective',def:'Just beginning to develop; not yet fully formed.',example:'"The nascent AI startup had only three engineers, but its technology was already attracting serious venture capital."',tip:'Perfect for describing new industries, trends, or ideas still in their earliest stages.'},
+  {word:'Elucidate',phonetic:'/ɪˈluː.sɪ.deɪt/',pos:'verb',def:'To make something clear; to explain or shed light on.',example:'"Could you elucidate how the new pricing model will affect our existing customer base?"',tip:'More precise than "explain" — implies bringing clarity to something confusing or complex.'},
+  {word:'Ephemeral',phonetic:'/ɪˈfem.ər.əl/',pos:'adjective',def:'Lasting for a very short time; transient.',example:'"Social media fame is often ephemeral — viral one week, forgotten the next."',tip:'Use when "temporary" or "fleeting" don\'t capture how brief something truly is.'},
+  {word:'Pragmatic',phonetic:'/præɡˈmæt.ɪk/',pos:'adjective',def:'Dealing with things sensibly and realistically, based on practical rather than theoretical considerations.',example:'"Rather than chasing the perfect solution, she took a pragmatic approach and shipped an MVP within two weeks."',tip:'Signals maturity in business conversations — the person who gets things done vs the person who theorises.'},
+  {word:'Ubiquitous',phonetic:'/juːˈbɪk.wɪ.təs/',pos:'adjective',def:'Present, appearing, or found everywhere.',example:'"Smartphones have become so ubiquitous that an entire generation has never known life without one."',tip:'Stronger than "common" or "widespread" — implies absolute presence.'},
+  {word:'Juxtapose',phonetic:'/ˌdʒʌk.stəˈpəʊz/',pos:'verb',def:'To place close together or side by side for comparison or contrast.',example:'"The report juxtaposed last quarter\'s revenue decline against the competitor\'s 40% growth."',tip:'Powerful in presentations and writing — instantly signals a deliberate comparison.'},
+  {word:'Exacerbate',phonetic:'/ɪɡˈzæs.ər.beɪt/',pos:'verb',def:'To make a problem, bad situation, or negative feeling worse.',example:'"The interest rate hike only exacerbated the housing affordability crisis that was already unfolding."',tip:'More precise than "make worse" — carries weight and urgency.'},
+  {word:'Salient',phonetic:'/ˈseɪ.li.ənt/',pos:'adjective',def:'Most noticeable or important; standing out prominently.',example:'"The most salient point from the earnings call was the unexpected pivot toward subscription revenue."',tip:'Use in professional settings to highlight the key takeaway — "the salient issue here is..."'},
+  {word:'Acumen',phonetic:'/ˈæk.jə.mən/',pos:'noun',def:'The ability to make good judgements and quick decisions, typically in a particular domain.',example:'"Her financial acumen allowed her to spot undervalued companies that larger funds had completely overlooked."',tip:'Business acumen, political acumen, investment acumen — always implies earned expertise.'},
+  {word:'Equivocal',phonetic:'/ɪˈkwɪv.ə.kəl/',pos:'adjective',def:'Open to more than one interpretation; ambiguous or uncertain.',example:'"The CEO gave an equivocal answer about the merger — neither confirming nor denying the rumours."',tip:'Opposite of "unequivocal" — useful for describing deliberately vague statements.'},
+  {word:'Perfunctory',phonetic:'/pərˈfʌŋk.tər.i/',pos:'adjective',def:'Carried out with a minimum of effort or reflection; done as a routine duty.',example:'"The compliance review was perfunctory at best — nobody actually read the documents they signed off on."',tip:'Implies negligence or lack of care. A sharp word for sloppy work.'},
+  {word:'Recalcitrant',phonetic:'/rɪˈkæl.sɪ.trənt/',pos:'adjective',def:'Having an obstinately uncooperative attitude; stubbornly resistant to authority or control.',example:'"The recalcitrant board member blocked every proposal regardless of merit, purely out of principle."',tip:'Stronger than "stubborn" — implies active defiance, not just passivity.'},
+  {word:'Ameliorate',phonetic:'/əˈmiː.li.ə.reɪt/',pos:'verb',def:'To make something bad or unsatisfactory better; to improve.',example:'"The government introduced subsidies to ameliorate the impact of rising energy costs on low-income households."',tip:'More formal than "improve" — implies deliberate effort to reduce suffering or difficulty.'},
+  {word:'Cogent',phonetic:'/ˈkəʊ.dʒənt/',pos:'adjective',def:'Clear, logical, and convincing.',example:'"She made a cogent argument for why the company should delay its IPO by six months."',tip:'The highest compliment for an argument — "cogent" means it\'s both logical AND persuasive.'},
+  {word:'Prodigious',phonetic:'/prəˈdɪdʒ.əs/',pos:'adjective',def:'Remarkably great in extent, size, or degree.',example:'"The hedge fund generated prodigious returns — averaging 34% annually for a decade straight."',tip:'More dramatic than "impressive" — use for things that genuinely defy normal scale.'},
+  {word:'Eschew',phonetic:'/ɪsˈtʃuː/',pos:'verb',def:'To deliberately avoid using, participating in, or consuming something.',example:'"He eschewed social media entirely, believing it eroded focus and deep thinking."',tip:'More deliberate than "avoid" — implies a conscious principled decision.'},
+  {word:'Inexorable',phonetic:'/ɪnˈek.sər.ə.bəl/',pos:'adjective',def:'Impossible to stop or prevent; continuing without any possibility of being stopped.',example:'"The inexorable rise of AI in every industry means adapting is not optional — it\'s survival."',tip:'Conveys unstoppable momentum. Great for describing trends, not just events.'},
+  {word:'Prescient',phonetic:'/ˈpreʃ.i.ənt/',pos:'adjective',def:'Having or showing knowledge of events before they take place.',example:'"Warren Buffett\'s prescient call to avoid tech stocks in 1999 saved Berkshire billions when the bubble burst."',tip:'The ultimate compliment for a prediction — "that was remarkably prescient."'},
+  {word:'Commensurate',phonetic:'/kəˈmen.sjə.rət/',pos:'adjective',def:'Corresponding in size, extent, or degree; proportional.',example:'"The salary increase was commensurate with her expanded responsibilities after the promotion."',tip:'Professional word — "commensurate with experience" appears in every good job listing.'},
+  {word:'Vicissitudes',phonetic:'/vɪˈsɪs.ɪ.tjuːdz/',pos:'noun',def:'Changes of circumstances or fortune, typically ones that are unwelcome.',example:'"Through all the vicissitudes of the property market, she held her position and came out ahead."',tip:'Elegant way to describe ups and downs — "the vicissitudes of life/business/markets."'},
+  {word:'Antithesis',phonetic:'/ænˈtɪθ.ə.sɪs/',pos:'noun',def:'A person or thing that is the direct opposite of something else.',example:'"Their management style was the antithesis of micromanagement — full autonomy with clear accountability."',tip:'Stronger than "opposite" — implies a stark, dramatic contrast.'},
+  {word:'Precipitate',phonetic:'/prɪˈsɪp.ɪ.teɪt/',pos:'verb',def:'To cause an event or situation to happen suddenly, unexpectedly, or prematurely.',example:'"The CEO\'s sudden resignation precipitated a 15% drop in the company\'s share price within hours."',tip:'Implies causation — X precipitated Y. More precise than "caused" or "triggered."'},
+  {word:'Pernicious',phonetic:'/pəˈnɪʃ.əs/',pos:'adjective',def:'Having a harmful effect, especially in a gradual or subtle way.',example:'"The pernicious effects of inflation erode purchasing power so slowly that most people don\'t notice until it\'s too late."',tip:'Key distinction: pernicious harm is sneaky and gradual, not sudden and obvious.'},
+  {word:'Magnanimous',phonetic:'/mæɡˈnæn.ɪ.məs/',pos:'adjective',def:'Generous or forgiving, especially towards a rival or someone less powerful.',example:'"In a magnanimous gesture, the acquiring CEO retained the entire leadership team rather than installing his own people."',tip:'Shows character — being magnanimous in victory is a sign of confidence and class.'},
+  {word:'Venerable',phonetic:'/ˈven.ər.ə.bəl/',pos:'adjective',def:'Accorded a great deal of respect, especially because of age, wisdom, or character.',example:'"The venerable investment bank, founded in 1847, had survived two world wars and three financial crises."',tip:'Implies respect earned through longevity and track record, not just age.'},
+  {word:'Conflate',phonetic:'/kənˈfleɪt/',pos:'verb',def:'To combine two or more things into one, often mistakenly treating distinct ideas as the same.',example:'"People often conflate revenue with profit, but a company can have massive revenue and still lose money."',tip:'Powerful in debates — "you\'re conflating X with Y" is a precise, respectful way to correct someone.'},
+  {word:'Insidious',phonetic:'/ɪnˈsɪd.i.əs/',pos:'adjective',def:'Proceeding in a gradual, subtle way but with harmful effects.',example:'"Lifestyle creep is insidious — you don\'t realise your spending has doubled until your savings rate hits zero."',tip:'Similar to pernicious but with a stronger sense of deception — the harm is almost intentionally hidden.'},
+  {word:'Compendium',phonetic:'/kəmˈpen.di.əm/',pos:'noun',def:'A collection of concise but detailed information about a particular subject.',example:'"This dashboard has become a compendium of everything I need — training, diet, goals, investments, vocabulary."',tip:'More elegant than "collection" or "reference guide" — implies comprehensive and well-organised.'},
+];
+
+function getTodaysWord() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return WORDS[dayOfYear % WORDS.length];
+}
+
+function renderWOTD() {
+  const w = getTodaysWord();
+  const d = getData();
+  const isSaved = (d.savedWords || []).some(sw => sw.word === w.word);
+  const card = document.getElementById('wotd-card');
+  card.innerHTML = `
+    <div class="wotd-card">
+      <div class="wotd-word">${w.word}</div>
+      <div class="wotd-phonetic">${w.phonetic}</div>
+      <div class="wotd-pos">${w.pos}</div>
+      <div class="wotd-def">${w.def}</div>
+      <div class="wotd-example">${w.example}</div>
+      <div class="wotd-tip">${w.tip}</div>
+      <div class="wotd-actions">
+        <button class="wotd-save ${isSaved ? 'saved' : ''}" onclick="toggleSaveWord()">
+          ${isSaved ? '★ Saved' : '☆ Save word'}
+        </button>
+        <button class="wotd-next" onclick="showRandomWord()">↻ Random word</button>
+        <button class="saved-words-toggle" onclick="toggleSavedWords()" style="margin-left:auto">
+          ${(d.savedWords || []).length} saved
+        </button>
+      </div>
+    </div>`;
+}
+
+let customWordIndex = null;
+
+function showRandomWord() {
+  const current = getTodaysWord();
+  let idx;
+  do { idx = Math.floor(Math.random() * WORDS.length); } while (WORDS[idx].word === current.word);
+  customWordIndex = idx;
+  const w = WORDS[idx];
+  const d = getData();
+  const isSaved = (d.savedWords || []).some(sw => sw.word === w.word);
+  const card = document.getElementById('wotd-card');
+  card.innerHTML = `
+    <div class="wotd-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="wotd-word">${w.word}</div>
+        <span style="font-size:10px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:10px">bonus word</span>
+      </div>
+      <div class="wotd-phonetic">${w.phonetic}</div>
+      <div class="wotd-pos">${w.pos}</div>
+      <div class="wotd-def">${w.def}</div>
+      <div class="wotd-example">${w.example}</div>
+      <div class="wotd-tip">${w.tip}</div>
+      <div class="wotd-actions">
+        <button class="wotd-save ${isSaved ? 'saved' : ''}" onclick="toggleSaveWord('${w.word.replace(/'/g,"\\'")}')">
+          ${isSaved ? '★ Saved' : '☆ Save word'}
+        </button>
+        <button class="wotd-next" onclick="showRandomWord()">↻ Another</button>
+        <button class="wotd-next" onclick="customWordIndex=null;renderWOTD()">← Today's word</button>
+      </div>
+    </div>`;
+}
+
+function toggleSaveWord(wordOverride) {
+  const w = wordOverride ? WORDS.find(x => x.word === wordOverride) : (customWordIndex !== null ? WORDS[customWordIndex] : getTodaysWord());
+  if (!w) return;
+  const d = getData();
+  const exists = d.savedWords.findIndex(sw => sw.word === w.word);
+  if (exists >= 0) {
+    d.savedWords.splice(exists, 1);
+    toast('Word removed');
+  } else {
+    d.savedWords.push({ word: w.word, def: w.def, pos: w.pos, ts: Date.now() });
+    toast('Word saved ★');
+  }
   save(d);
-  document.getElementById('s-api-key').value = '••••••••••••••••';
-  document.getElementById('api-key-status').textContent = 'Gemini key saved · Auto mode ready';
-  toast('API key saved');
+  if (customWordIndex !== null) showRandomWord();
+  else renderWOTD();
+  renderSavedWords();
+}
+
+function toggleSavedWords() {
+  const section = document.getElementById('saved-words-section');
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    renderSavedWords();
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function renderSavedWords() {
+  const d = getData();
+  const list = document.getElementById('saved-words-list');
+  const section = document.getElementById('saved-words-section');
+  if (!d.savedWords.length) {
+    section.style.display = 'none';
+    return;
+  }
+  list.innerHTML = d.savedWords.slice().reverse().map((sw, i) => {
+    const realIdx = d.savedWords.length - 1 - i;
+    return `
+      <div class="saved-word-item">
+        <div>
+          <div class="sw-word">${sw.word}</div>
+          <div class="sw-def">${sw.pos} · ${sw.def.slice(0, 80)}${sw.def.length > 80 ? '…' : ''}</div>
+        </div>
+        <button class="sw-remove" onclick="removeSavedWord(${realIdx})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function removeSavedWord(idx) {
+  const d = getData();
+  d.savedWords.splice(idx, 1);
+  save(d);
+  renderSavedWords();
+  renderWOTD();
+  toast('Word removed');
 }
 
 // ─── INVEST ──────────────────────────────────────────────────────────────────
@@ -1265,95 +1421,8 @@ Return exactly 5 items. Be specific with current relevance, not generic. Use rea
 }
 
 async function refreshPicks() {
-  const d = getData();
-  const status = document.getElementById('picks-status');
-
-  // Check sync first
   if (syncCfg) await syncPull();
-
-  // If they have API key, use auto. Otherwise paste flow.
-  if (d.apiKey) {
-    await refreshPicksAuto();
-  } else {
-    refreshPicksPaste();
-  }
-}
-
-async function refreshPicksAuto() {
-  const d = getData();
-  const status = document.getElementById('picks-status');
-  status.innerHTML = '<span class="loading-spin"></span> Generating fresh picks with Gemini...';
-
-  const prompt = buildPicksPrompt();
-  const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-preview', 'gemini-3-flash-preview'];
-
-  let apiResponse = null;
-  let usedModel = '';
-  let lastError = '';
-
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        if (attempt > 0) {
-          status.innerHTML = `<span class="loading-spin"></span> Retrying ${model} (${attempt + 1}/3)...`;
-          await new Promise(r => setTimeout(r, 3000 * attempt));
-        }
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(d.apiKey)}`,
-          {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              contents: [{parts: [{text: prompt}]}],
-              generationConfig: {temperature: 0.7, maxOutputTokens: 2000},
-            }),
-          }
-        );
-        if (res.ok) { apiResponse = await res.json(); usedModel = model; break; }
-        const errBody = await res.json().catch(() => ({}));
-        const errMsg = errBody.error?.message || `HTTP ${res.status}`;
-        if (res.status === 404) { lastError = errMsg; break; }
-        if (res.status === 429 || res.status === 503 || errMsg.includes('high demand')) {
-          lastError = errMsg;
-          continue;
-        }
-        throw new Error(errMsg);
-      } catch(e) {
-        if (e.message.includes('not found') || e.message.includes('not supported')) break;
-        if (e.message.includes('high demand') || e.message.includes('rate')) { lastError = e.message; continue; }
-        status.innerHTML = `<span style="color:var(--race)">Error: ${e.message}</span>`;
-        return;
-      }
-    }
-    if (apiResponse) break;
-  }
-
-  if (!apiResponse) {
-    status.innerHTML = `<span style="color:var(--race)">All models busy — try Paste mode below, or wait a few minutes</span>`;
-    return;
-  }
-
-  try {
-    const text = apiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON in response');
-    const parsed = JSON.parse(match[0]);
-    if (!parsed.items || !Array.isArray(parsed.items)) throw new Error('No items in response');
-
-    const dd = getData();
-    dd.picks = {
-      items: parsed.items,
-      ts: Date.now(),
-      source: 'Gemini · ' + usedModel,
-    };
-    save(dd);
-    status.textContent = '';
-    renderPicks();
-    toast('Fresh picks loaded');
-  } catch(e) {
-    status.innerHTML = `<span style="color:var(--race)">Could not parse response — try again</span>`;
-  }
+  refreshPicksPaste();
 }
 
 let pendingPicksPaste = false;
@@ -1362,27 +1431,34 @@ async function refreshPicksPaste() {
   const prompt = buildPicksPrompt();
   pendingPicksPaste = true;
 
-  // Try clipboard copy
-  try {
-    await navigator.clipboard.writeText(prompt);
-  } catch(e) {}
-
   const status = document.getElementById('picks-status');
   status.innerHTML = `
     <div style="background:rgba(200,184,154,.07);border:.5px solid rgba(200,184,154,.25);border-radius:var(--r-sm);padding:12px;margin:8px 0;text-align:left">
-      <div style="font-size:12px;color:var(--text);margin-bottom:6px"><strong>Paste mode:</strong></div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
-        1. Prompt copied to clipboard<br>
-        2. Open Claude.ai → paste → get JSON response<br>
-        3. Copy the JSON back → paste below → Save
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Step 1: Copy the prompt</strong></div>
+      <textarea id="picks-prompt-text" readonly style="height:70px;font-family:monospace;font-size:10px;color:var(--text2);margin-bottom:6px">${prompt.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <button class="btn btn-sm" style="margin-top:0;width:100%" onclick="copyPicksPrompt()">📋 Copy prompt</button>
+        <button class="btn btn-sm" style="margin-top:0;width:100%;background:var(--accent);color:#1a1510" onclick="window.open('https://claude.ai/new','_blank')">Open Claude.ai ↗</button>
       </div>
-      <textarea id="picks-paste-input" placeholder='{"items": [...]}' style="height:100px;font-family:monospace;font-size:11px;margin-bottom:6px"></textarea>
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px"><strong>Step 2: Paste Claude's response</strong></div>
+      <textarea id="picks-paste-input" placeholder='Paste the JSON response here...' style="height:100px;font-family:monospace;font-size:11px;margin-bottom:6px"></textarea>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-sm" style="margin-top:0;flex:1" onclick="window.open('https://claude.ai/new','_blank')">Open Claude.ai</button>
-        <button class="btn btn-sm" style="margin-top:0;flex:1;background:var(--accent);color:#1a1510" onclick="savePicksPaste()">Save</button>
-        <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="cancelPicksPaste()">×</button>
+        <button class="btn btn-sm" style="margin-top:0;flex:1;background:var(--accent2);color:#1a1510" onclick="savePicksPaste()">Save picks</button>
+        <button class="btn btn-sm btn-ghost" style="margin-top:0" onclick="cancelPicksPaste()">Cancel</button>
       </div>
     </div>`;
+}
+
+function copyPicksPrompt() {
+  const ta = document.getElementById('picks-prompt-text');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try {
+    navigator.clipboard.writeText(ta.value).then(() => toast('Prompt copied ✓'));
+  } catch(e) {
+    document.execCommand('copy');
+    toast('Prompt copied ✓');
+  }
 }
 
 function savePicksPaste() {
@@ -1503,106 +1579,78 @@ Respond with ONLY a JSON object (no markdown, no preamble) in this exact structu
 Be specific with prices and percentages. Tailor the analysis genuinely to their horizon — a momentum play has different logic than a 10-year hold.`;
 }
 
-let pendingPaste = null; // holds {ticker, horizon, notes, stockData} while user pastes
+let pendingPaste = null;
 
-async function runPasteMode() {
+async function runAnalyse() {
   const ticker = document.getElementById('inv-ticker').value.trim().toUpperCase();
   const notes = document.getElementById('inv-notes').value.trim();
   const horizon = selectedHorizon;
   if (!ticker) { toast('Enter a ticker first'); return; }
 
   const status = document.getElementById('inv-status');
-  status.innerHTML = '<span class="loading-spin"></span> Fetching live price data...';
+  status.innerHTML = '<span class="loading-spin"></span> Fetching live price...';
+  document.getElementById('inv-result').innerHTML = '';
 
   const stockData = await fetchStockData(ticker);
-
   const prompt = buildPrompt(ticker, horizon, notes, stockData);
   pendingPaste = { ticker, horizon, notes, stockData };
 
-  // Copy to clipboard
-  try {
-    await navigator.clipboard.writeText(prompt);
-    status.innerHTML = '✓ Prompt copied · opening Claude.ai...';
-  } catch(e) {
-    status.innerHTML = '<span style="color:var(--race)">Could not auto-copy. Tap field below to copy manually.</span>';
-    // Show prompt textarea for manual copy
-    const area = document.getElementById('paste-response-area');
-    area.style.display = 'block';
-    area.innerHTML = `
-      <div class="card" style="border-color:var(--accent)">
-        <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Copy this prompt, then paste into Claude.ai:</strong></div>
-        <textarea readonly onclick="this.select()" style="height:120px;font-family:monospace;font-size:11px">${prompt.replace(/</g,'&lt;')}</textarea>
-        <button class="btn" onclick="copyPromptManual()">Copy prompt</button>
-        <button class="btn btn-ghost" onclick="showPasteResponseArea()" style="margin-top:8px">I've got Claude's response — paste it</button>
-        <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
-      </div>`;
-    return;
-  }
+  status.innerHTML = '';
 
-  setTimeout(() => {
-    window.open('https://claude.ai/new', '_blank');
-    showPasteResponseArea();
-  }, 700);
-}
-
-function showPasteResponseArea() {
+  // Show the prompt + copy button + paste area
   const area = document.getElementById('paste-response-area');
   area.style.display = 'block';
   area.innerHTML = `
     <div class="card" style="border-color:var(--accent)">
-      <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Paste Claude's JSON response below:</strong></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5">Copy the entire JSON block from Claude's response (including the curly braces) and paste it here.</div>
-      <textarea id="paste-response" placeholder='{"verdict": "BUY", "risk_score": 6, ...}' style="height:120px;font-family:monospace;font-size:11px"></textarea>
-      <button class="btn" onclick="parsePasteResponse()">Save analysis</button>
-      <button class="btn btn-ghost" onclick="cancelPasteMode()" style="margin-top:8px">Cancel</button>
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Step 1: Copy the prompt</strong></div>
+      <textarea id="prompt-text" readonly style="height:80px;font-family:monospace;font-size:10px;color:var(--text2);margin-bottom:6px">${prompt.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <button class="btn" style="margin-top:0;font-size:13px" onclick="copyPrompt()">📋 Copy prompt</button>
+        <button class="btn" style="margin-top:0;font-size:13px" onclick="window.open('https://claude.ai/new','_blank')">Open Claude.ai ↗</button>
+      </div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px"><strong>Step 2: Paste Claude's response</strong></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Paste the prompt in Claude.ai → copy the JSON response → paste below</div>
+      <textarea id="paste-response" placeholder='Paste the JSON response here...' style="height:110px;font-family:monospace;font-size:11px"></textarea>
+      <button class="btn" onclick="savePasteResponse()" style="background:var(--accent2);color:#1a1510">Save analysis</button>
+      <button class="btn btn-ghost" onclick="cancelPaste()" style="margin-top:6px">Cancel</button>
     </div>`;
-  document.getElementById('inv-status').textContent = '';
-  setTimeout(() => document.getElementById('paste-response')?.focus(), 100);
 }
 
-function copyPromptManual() {
-  const ta = document.querySelector('#paste-response-area textarea');
+function copyPrompt() {
+  const ta = document.getElementById('prompt-text');
   ta.select();
-  document.execCommand('copy');
-  toast('Prompt copied');
+  ta.setSelectionRange(0, 99999); // mobile support
+  try {
+    navigator.clipboard.writeText(ta.value).then(() => toast('Prompt copied ✓'));
+  } catch(e) {
+    document.execCommand('copy');
+    toast('Prompt copied ✓');
+  }
 }
 
-function cancelPasteMode() {
-  pendingPaste = null;
-  document.getElementById('paste-response-area').style.display = 'none';
-  document.getElementById('paste-response-area').innerHTML = '';
-  document.getElementById('inv-status').textContent = '';
-}
-
-function parsePasteResponse() {
-  const text = document.getElementById('paste-response').value.trim();
+function savePasteResponse() {
+  const text = document.getElementById('paste-response')?.value?.trim();
   if (!text) { toast('Paste the response first'); return; }
   if (!pendingPaste) { toast('No pending analysis'); return; }
 
   let analysis;
   try {
-    // Try direct parse first
-    analysis = JSON.parse(text);
-  } catch(e) {
-    // Try to extract JSON block
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) { toast('Could not find JSON in response'); return; }
-    try {
+    try { analysis = JSON.parse(text); } catch(e) {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON found');
       analysis = JSON.parse(match[0]);
-    } catch(e2) {
-      toast('Invalid JSON — try copying again');
-      return;
     }
+  } catch(e) {
+    toast('Invalid JSON — copy the full JSON block from Claude');
+    return;
   }
 
   const { ticker, horizon, notes, stockData } = pendingPaste;
   const d = getData();
   d.analyses.push({
-    ts: Date.now(),
-    ticker, horizon, notes,
-    analysis,
+    ts: Date.now(), ticker, horizon, notes, analysis,
     stockData: stockData ? {price: stockData.price, currency: stockData.currency, pct: stockData.pct} : null,
-    source: 'paste',
+    source: 'claude',
   });
   save(d);
   pendingPaste = null;
@@ -1612,119 +1660,13 @@ function parsePasteResponse() {
   toast('Analysis saved');
 }
 
-async function runAutoMode() {
-  const d = getData();
-  const ticker = document.getElementById('inv-ticker').value.trim().toUpperCase();
-  const notes = document.getElementById('inv-notes').value.trim();
-  const horizon = selectedHorizon;
-
-  if (!ticker) { toast('Enter a ticker first'); return; }
-  if (!d.apiKey) {
-    toast('Add free Gemini key in Settings for Auto mode');
-    goPage('settings');
-    return;
-  }
-
-  const status = document.getElementById('inv-status');
-  const result = document.getElementById('inv-result');
-  status.innerHTML = '<span class="loading-spin"></span> Fetching live price data...';
-  result.innerHTML = '';
-
-  const stockData = await fetchStockData(ticker);
-
-  status.innerHTML = '<span class="loading-spin"></span> Analysing with Gemini...';
-
-  const prompt = buildPrompt(ticker, horizon, notes, stockData);
-
-  try {
-    // Try models in order — first available free-tier model wins
-    // With automatic retry on high-demand / rate-limit errors
-    const MODELS = [
-      'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-2.5-flash-preview',
-      'gemini-3-flash-preview',
-    ];
-
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 3000; // 3 seconds between retries
-
-    let apiResponse = null;
-    let usedModel = '';
-    let lastError = '';
-
-    for (const model of MODELS) {
-      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-        try {
-          if (attempt > 0) {
-            status.innerHTML = `<span class="loading-spin"></span> High demand — retrying ${model} (attempt ${attempt + 1}/${MAX_RETRIES})...`;
-            await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
-          }
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(d.apiKey)}`,
-            {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                contents: [{parts: [{text: prompt}]}],
-                generationConfig: {temperature: 0.4, maxOutputTokens: 2000},
-              }),
-            }
-          );
-          if (res.ok) {
-            apiResponse = await res.json();
-            usedModel = model;
-            break;
-          }
-          const errBody = await res.json().catch(() => ({}));
-          const errMsg = errBody.error?.message || `HTTP ${res.status}`;
-          // 404 = model not found — skip to next model immediately
-          if (res.status === 404) { lastError = errMsg; break; }
-          // 429 or 503 = overloaded / rate limited — retry same model
-          if (res.status === 429 || res.status === 503 || errMsg.includes('high demand')) {
-            lastError = errMsg;
-            continue;
-          }
-          // Other errors — throw
-          throw new Error(errMsg);
-        } catch(e) {
-          if (e.message.includes('not found') || e.message.includes('not supported')) break;
-          if (e.message.includes('high demand') || e.message.includes('rate')) { lastError = e.message; continue; }
-          throw e;
-        }
-      }
-      if (apiResponse) break;
-    }
-
-    if (!apiResponse) {
-      // All models failed — offer paste mode as fallback
-      throw new Error(lastError + ' — try Paste mode instead (uses your Claude.ai subscription)');
-    }
-
-    const text = apiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    if (!text) throw new Error('Empty response from ' + usedModel);
-
-    const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON in response');
-    const analysis = JSON.parse(match[0]);
-
-    const dd = getData();
-    dd.analyses.push({
-      ts: Date.now(),
-      ticker, horizon, notes,
-      analysis,
-      stockData: stockData ? {price: stockData.price, currency: stockData.currency, pct: stockData.pct} : null,
-      source: 'gemini',
-    });
-    save(dd);
-
-    status.textContent = '';
-    renderAnalysis(analysis, ticker, horizon, stockData);
-  } catch(e) {
-    status.innerHTML = '<span style="color:var(--race)">Error: ' + e.message + '</span>';
-  }
+function cancelPaste() {
+  pendingPaste = null;
+  document.getElementById('paste-response-area').style.display = 'none';
+  document.getElementById('paste-response-area').innerHTML = '';
+  document.getElementById('inv-status').textContent = '';
 }
+
 
 function renderAnalysis(a, ticker, horizon, stockData) {
   const verdict = a.verdict || 'HOLD';
